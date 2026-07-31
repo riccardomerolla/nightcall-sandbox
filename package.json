@@ -1,0 +1,11 @@
+{
+  "name": "nightcall-sandbox",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sandbox target for the Nightcall trust bar: a tiny string utility library",
+  "type": "module",
+  "main": "src/strcase.js",
+  "scripts": {
+    "test": "node --test"
+  }
+}
