@@ -1,0 +1,15 @@
+{
+  "customerId": "C-000451",
+  "fullName": "Mario Rossi",
+  "assessedAt": "2026-03-12",
+  "riskProfile": "balanced",
+  "riskProfileScale": ["conservative", "cautious", "balanced", "growth", "aggressive"],
+  "investmentHorizonYears": 8,
+  "knowledgeLevel": "informed",
+  "sustainabilityPreference": false,
+  "objectives": ["capital_growth", "retirement"],
+  "constraints": {
+    "maxSinglePositionPct": 25,
+    "minCashPct": 5
+  }
+}
