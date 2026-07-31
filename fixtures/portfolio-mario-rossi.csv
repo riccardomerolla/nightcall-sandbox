@@ -1,0 +1,8 @@
+isin,name,assetClass,quantity,priceEur,currency
+IE00B4L5Y983,iShares Core MSCI World UCITS ETF,equity,120,101.52,EUR
+IE00B1FZS798,iShares Core Euro Government Bond UCITS ETF,government_bond,300,118.30,EUR
+LU0908500753,Amundi ETF Euro Corporate Bond,corporate_bond,150,52.10,EUR
+IE00B579F325,Invesco Physical Gold ETC,commodity,40,190.75,EUR
+IT0005433195,BTP Italia Nov 2028,government_bond,10000,0.9812,EUR
+LU1681043599,Amundi MSCI Emerging Markets,equity,220,4.86,EUR
+CASH-EUR,Cash account,cash,1,15400.00,EUR

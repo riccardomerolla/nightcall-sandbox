@@ -1,11 +1,27 @@
 {
-  "name": "nightcall-sandbox",
+  "name": "advisor-workbench",
   "version": "0.1.0",
   "private": true,
-  "description": "Sandbox target for the Nightcall trust bar: a tiny string utility library",
-  "type": "module",
-  "main": "src/strcase.js",
+  "description": "Perplexity-Finance-style workbench for bank financial advisors: import a retail customer's portfolio and MiFID profile, analyze it, and propose a rebalancing",
   "scripts": {
-    "test": "node --test"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "gate": "npm run typecheck && npm run test"
+  },
+  "dependencies": {
+    "effect": "^4.0.0-beta.102",
+    "next": "^15.4.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.0"
   }
 }
