@@ -18,3 +18,6 @@ export const camelCase = (input) => {
     )
     .join("")
 }
+
+/** kebab-case: words joined with hyphens. */
+export const kebabCase = (input) => words(input).join("-")
