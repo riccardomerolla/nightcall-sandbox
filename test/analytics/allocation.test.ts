@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest"
 
 import {
   allocationByAssetClass,
-  positionWeights
+  positionWeights,
+  positionsWithWeights
 } from "../../lib/analytics/allocation"
 import {
   PortfolioPosition,
@@ -25,6 +26,16 @@ const position = (
   })
 
 describe("positionWeights", () => {
+  it("keeps each calculated weight associated with its position", () => {
+    const equity = position("EQ", "equity", 2, 100)
+    const cash = position("CASH", "cash", 3, 100)
+
+    expect(positionsWithWeights([equity, cash])).toEqual([
+      { position: equity, weightPct: 40 },
+      { position: cash, weightPct: 60 }
+    ])
+  })
+
   it("calculates value-based weights for a multi-asset-class portfolio", () => {
     const weights = positionWeights([
       position("EQ", "equity", 2, 100),

@@ -5,7 +5,7 @@ import type {
   Portfolio,
   PortfolioPosition
 } from "../domain/portfolio"
-import { allocationByAssetClass, positionWeights } from "./allocation"
+import { allocationByAssetClass, positionsWithWeights } from "./allocation"
 
 export interface AllocationDeviation {
   readonly assetClass: AssetClass
@@ -73,10 +73,8 @@ export const suitabilityReport = (
     MODEL_TARGET_ALLOCATION_PERCENTAGES[mifidProfile.riskProfile]
   const positionLimitPct = mifidProfile.constraints.maxSinglePositionPct
   const positionViolations: ReadonlyArray<SuitabilityViolation> =
-    positionWeights(portfolio.positions).flatMap((actualPct, index) => {
-      const position = portfolio.positions[index]
-
-      return position !== undefined &&
+    positionsWithWeights(portfolio.positions).flatMap(
+      ({ position, weightPct: actualPct }) =>
         exceedsMaximumBeyondTolerance(actualPct, positionLimitPct)
         ? [
           {
@@ -87,7 +85,7 @@ export const suitabilityReport = (
           }
         ]
         : []
-    })
+    )
   const minimumCashPct = mifidProfile.constraints.minCashPct
   const cashViolation: ReadonlyArray<SuitabilityViolation> =
     fallsBelowMinimumBeyondTolerance(actualAllocation.cash, minimumCashPct)

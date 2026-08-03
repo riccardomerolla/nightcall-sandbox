@@ -12,8 +12,38 @@ vi.hoisted(() => {
 
 import CustomerPage from "../app/customer/page"
 
-const fixture = readFileSync("fixtures/mifid-mario-rossi.json", "utf8")
+const customerFixture = readFileSync("fixtures/mifid-mario-rossi.json", "utf8")
+const portfolioFixture = readFileSync(
+  "fixtures/portfolio-mario-rossi.csv",
+  "utf8"
+)
 const flushPromises = () => new Promise((resolve) => setTimeout(resolve, 0))
+
+const customerFixtureUrl = "/nightcall/fixtures/mifid-mario-rossi.json"
+const portfolioFixtureUrl = "/nightcall/fixtures/portfolio-mario-rossi.csv"
+
+type FixtureResponse = () => Response | Promise<Response>
+
+const createFixtureFetchMock = ({
+  customer = () => new Response(customerFixture, { status: 200 }),
+  portfolio = () => new Response(portfolioFixture, { status: 200 })
+}: {
+  readonly customer?: FixtureResponse
+  readonly portfolio?: FixtureResponse
+} = {}) =>
+  vi.fn<typeof fetch>().mockImplementation((input) => {
+    const url = String(input)
+
+    if (url === customerFixtureUrl) {
+      return Promise.resolve(customer())
+    }
+
+    if (url === portfolioFixtureUrl) {
+      return Promise.resolve(portfolio())
+    }
+
+    return Promise.reject(new Error(`Unexpected fixture request: ${url}`))
+  })
 
 describe("CustomerPage", () => {
   let container: HTMLDivElement
@@ -32,13 +62,14 @@ describe("CustomerPage", () => {
     vi.unstubAllGlobals()
   })
 
-  it("loads the base-path-aware fixture and renders the imported customer", async () => {
+  it("loads base-path-aware customer and portfolio fixtures and renders the dashboard", async () => {
     let respond: (response: Response) => void = () => undefined
-    const fetchMock = vi.fn<typeof fetch>().mockImplementation(
-      () => new Promise((resolve) => {
-        respond = resolve
-      })
-    )
+    const fetchMock = createFixtureFetchMock({
+      customer: () =>
+        new Promise((resolve) => {
+          respond = resolve
+        })
+    })
     vi.stubGlobal("fetch", fetchMock)
 
     await act(async () => root.render(createElement(CustomerPage)))
@@ -47,14 +78,18 @@ describe("CustomerPage", () => {
       "Loading customer data…"
     )
     expect(fetchMock).toHaveBeenCalledWith(
-      "/nightcall/fixtures/mifid-mario-rossi.json",
+      customerFixtureUrl,
       { signal: expect.any(AbortSignal) }
     )
 
     await act(async () => {
-      respond(new Response(fixture, { status: 200 }))
+      respond(new Response(customerFixture, { status: 200 }))
       await flushPromises()
     })
+    expect(fetchMock).toHaveBeenCalledWith(
+      portfolioFixtureUrl,
+      { signal: expect.any(AbortSignal) }
+    )
     expect(container.textContent).toContain(
       "Customer data loaded for C-000451."
     )
@@ -88,6 +123,31 @@ describe("CustomerPage", () => {
     expect(definitionFor("Risk profile")).toBe("Balanced")
     expect(definitionFor("Investment horizon")).toBe("8 years")
     expect(definitionFor("Objectives")).toBe("Capital growth, Retirement")
+
+    const positions = container.querySelector(
+      'section[aria-labelledby="positions-heading"]'
+    )
+    expect(positions).toBeInstanceOf(HTMLElement)
+    expect(positions?.querySelector("h2")?.textContent).toBe("Positions")
+
+    const rows = positions?.querySelectorAll("tbody tr") ?? []
+    expect(
+      Array.from(rows, (row) =>
+        Array.from(row.children, (cell) => cell.textContent)
+      )
+    ).toEqual([
+      ["iShares Core MSCI World UCITS ETF", "€12,182.40", "13.6%"],
+      [
+        "iShares Core Euro Government Bond UCITS ETF",
+        "€35,490.00",
+        "39.7%"
+      ],
+      ["Amundi ETF Euro Corporate Bond", "€7,815.00", "8.7%"],
+      ["Invesco Physical Gold ETC", "€7,630.00", "8.5%"],
+      ["BTP Italia Nov 2028", "€9,812.00", "11.0%"],
+      ["Amundi MSCI Emerging Markets", "€1,069.20", "1.2%"],
+      ["Cash account", "€15,400.00", "17.2%"]
+    ])
   })
 
   it("renders the response status when the fixture request fails", async () => {
@@ -105,14 +165,36 @@ describe("CustomerPage", () => {
     )
   })
 
+  it("renders the response status when the portfolio request fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      createFixtureFetchMock({
+        portfolio: () => new Response(null, { status: 502 })
+      })
+    )
+
+    await act(async () => {
+      root.render(createElement(CustomerPage))
+      await flushPromises()
+    })
+
+    expect(container.querySelector("h1")?.textContent).toBe(
+      "Unable to load portfolio"
+    )
+    expect(container.querySelector('[role="alert"]')?.textContent).toBe(
+      "The portfolio data could not be loaded: Portfolio request failed (502)"
+    )
+  })
+
   it("uses singular grammar for a one-year investment horizon", async () => {
-    const oneYearFixture = JSON.parse(fixture) as Record<string, unknown>
+    const oneYearFixture = JSON.parse(customerFixture) as Record<string, unknown>
     oneYearFixture.investmentHorizonYears = 1
     vi.stubGlobal(
       "fetch",
-      vi.fn<typeof fetch>().mockResolvedValue(
-        new Response(JSON.stringify(oneYearFixture), { status: 200 })
-      )
+      createFixtureFetchMock({
+        customer: () =>
+          new Response(JSON.stringify(oneYearFixture), { status: 200 })
+      })
     )
 
     await act(async () => {
@@ -130,9 +212,9 @@ describe("CustomerPage", () => {
   it("renders the importer diagnostic when the fixture is malformed", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn<typeof fetch>().mockResolvedValue(
-        new Response('{"customerId":', { status: 200 })
-      )
+      createFixtureFetchMock({
+        customer: () => new Response('{"customerId":', { status: 200 })
+      })
     )
 
     await act(async () => {
@@ -146,13 +228,14 @@ describe("CustomerPage", () => {
   })
 
   it("renders the importer diagnostic when required customer data is missing", async () => {
-    const invalidFixture = JSON.parse(fixture) as Record<string, unknown>
+    const invalidFixture = JSON.parse(customerFixture) as Record<string, unknown>
     delete invalidFixture.customerId
     vi.stubGlobal(
       "fetch",
-      vi.fn<typeof fetch>().mockResolvedValue(
-        new Response(JSON.stringify(invalidFixture), { status: 200 })
-      )
+      createFixtureFetchMock({
+        customer: () =>
+          new Response(JSON.stringify(invalidFixture), { status: 200 })
+      })
     )
 
     await act(async () => {
@@ -220,9 +303,27 @@ describe("CustomerPage", () => {
     expect(requestSignal?.aborted).toBe(true)
 
     await act(async () => {
-      respond(new Response(fixture, { status: 200 }))
+      respond(new Response(customerFixture, { status: 200 }))
       await flushPromises()
     })
     expect(container.textContent).toBe("")
+  })
+
+  it("renders an error when the portfolio fixture is invalid", async () => {
+    vi.stubGlobal(
+      "fetch",
+      createFixtureFetchMock({
+        portfolio: () => new Response("not,a,portfolio", { status: 200 })
+      })
+    )
+
+    await act(async () => {
+      root.render(createElement(CustomerPage))
+      await flushPromises()
+    })
+
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain(
+      "The portfolio data is invalid: Expected header"
+    )
   })
 })

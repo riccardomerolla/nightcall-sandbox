@@ -3,17 +3,28 @@
 import { Effect } from "effect"
 import { useEffect, useState } from "react"
 
+import { positionsWithWeights } from "../../lib/analytics/allocation"
 import type { MiFIDProfile } from "../../lib/domain/mifid"
+import type { Portfolio } from "../../lib/domain/portfolio"
+import { formatEUR } from "../../lib/format/currency"
+import { formatPercent } from "../../lib/format/percent"
 import { importMiFIDJson } from "../../lib/importers/mifid-json"
+import { importPortfolioCsv } from "../../lib/importers/portfolio-csv"
 
 const customerFixtureUrl = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/fixtures/mifid-mario-rossi.json`
+const portfolioFixtureUrl = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/fixtures/portfolio-mario-rossi.csv`
 
-type CustomerState =
+type DashboardState =
   | { readonly status: "loading" }
-  | { readonly status: "loaded"; readonly customer: MiFIDProfile }
+  | {
+      readonly status: "loaded"
+      readonly customer: MiFIDProfile
+      readonly portfolio: Portfolio
+    }
   | {
       readonly status: "error"
       readonly kind: "request" | "data"
+      readonly source: "customer" | "portfolio"
       readonly message: string
     }
 
@@ -42,45 +53,91 @@ const formatUnderscoreDelimitedIdentifier = (identifier: string) =>
 const formatInvestmentHorizon = (years: number) =>
   `${years} ${years === 1 ? "year" : "years"}`
 
-const loadCustomer = async (signal: AbortSignal): Promise<CustomerState> => {
-  let source: string
+const fetchFixture = async (
+  url: string,
+  label: "Customer" | "Portfolio",
+  signal: AbortSignal
+) => {
+  const response = await fetch(url, { signal })
+
+  if (!response.ok) {
+    throw new Error(`${label} request failed (${response.status})`)
+  }
+
+  return response.text()
+}
+
+const loadDashboard = async (signal: AbortSignal): Promise<DashboardState> => {
+  let customerResponseBody: string
 
   try {
-    const response = await fetch(customerFixtureUrl, { signal })
-
-    if (!response.ok) {
-      throw new Error(`Customer request failed (${response.status})`)
-    }
-
-    source = await response.text()
+    customerResponseBody = await fetchFixture(
+      customerFixtureUrl,
+      "Customer",
+      signal
+    )
   } catch (cause) {
     return {
       status: "error",
       kind: "request",
+      source: "customer",
+      message: errorMessage(cause)
+    }
+  }
+
+  let customer: MiFIDProfile
+
+  try {
+    customer = await Effect.runPromise(importMiFIDJson(customerResponseBody))
+  } catch (cause) {
+    return {
+      status: "error",
+      kind: "data",
+      source: "customer",
+      message: errorMessage(cause)
+    }
+  }
+
+  let portfolioResponseBody: string
+
+  try {
+    portfolioResponseBody = await fetchFixture(
+      portfolioFixtureUrl,
+      "Portfolio",
+      signal
+    )
+  } catch (cause) {
+    return {
+      status: "error",
+      kind: "request",
+      source: "portfolio",
       message: errorMessage(cause)
     }
   }
 
   try {
-    const customer = await Effect.runPromise(importMiFIDJson(source))
+    const portfolio = await Effect.runPromise(
+      importPortfolioCsv(portfolioResponseBody)
+    )
 
-    return { status: "loaded", customer }
+    return { status: "loaded", customer, portfolio }
   } catch (cause) {
     return {
       status: "error",
       kind: "data",
+      source: "portfolio",
       message: errorMessage(cause)
     }
   }
 }
 
 export default function CustomerPage() {
-  const [state, setState] = useState<CustomerState>({ status: "loading" })
+  const [state, setState] = useState<DashboardState>({ status: "loading" })
 
   useEffect(() => {
     const controller = new AbortController()
 
-    void loadCustomer(controller.signal).then((nextState) => {
+    void loadDashboard(controller.signal).then((nextState) => {
       if (!controller.signal.aborted) {
         setState(nextState)
       }
@@ -102,18 +159,21 @@ export default function CustomerPage() {
   }
 
   if (state.status === "error") {
+    const sourceLabel = state.source === "customer" ? "customer" : "portfolio"
     const errorDescription =
       state.kind === "request"
-        ? `The customer data could not be loaded: ${state.message}`
-        : `The customer data is invalid: ${state.message}`
+        ? `The ${sourceLabel} data could not be loaded: ${state.message}`
+        : `The ${sourceLabel} data is invalid: ${state.message}`
 
     return (
       <main style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}>
-        <h1>Unable to load customer</h1>
+        <h1>Unable to load {sourceLabel}</h1>
         <p role="alert">{errorDescription}</p>
       </main>
     )
   }
+
+  const weightedPositions = positionsWithWeights(state.portfolio.positions)
 
   return (
     <main style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}>
@@ -134,6 +194,27 @@ export default function CustomerPage() {
           </dd>
         </dl>
       </header>
+      <section aria-labelledby="positions-heading">
+        <h2 id="positions-heading">Positions</h2>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Instrument</th>
+              <th scope="col">Market value</th>
+              <th scope="col">Portfolio weight</th>
+            </tr>
+          </thead>
+          <tbody>
+            {weightedPositions.map(({ position, weightPct }) => (
+              <tr key={position.isin}>
+                <th scope="row">{position.name}</th>
+                <td>{formatEUR(position.quantity * position.priceEur)}</td>
+                <td>{formatPercent(weightPct)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
     </main>
   )
 }

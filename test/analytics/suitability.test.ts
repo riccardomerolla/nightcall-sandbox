@@ -323,13 +323,13 @@ describe("suitabilityReport", () => {
   })
 
   it("imports the Mario Rossi fixtures and reports their suitability end to end", async () => {
-    const portfolioSource = readFileSync(
+    const portfolioCsv = readFileSync(
       "fixtures/portfolio-mario-rossi.csv",
       "utf8"
     )
     const mifidSource = readFileSync("fixtures/mifid-mario-rossi.json", "utf8")
     const portfolio = await Effect.runPromise(
-      importPortfolioCsv(portfolioSource)
+      importPortfolioCsv(portfolioCsv)
     )
     const mifidProfile = await Effect.runPromise(importMiFIDJson(mifidSource))
 
