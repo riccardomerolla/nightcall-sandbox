@@ -3,3 +3,4 @@ node_modules/
 *.tsbuildinfo
 .llm4ts/
 out/
+.repos/
