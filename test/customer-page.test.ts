@@ -148,6 +148,38 @@ describe("CustomerPage", () => {
       ["Amundi MSCI Emerging Markets", "€1,069.20", "1.2%"],
       ["Cash account", "€15,400.00", "17.2%"]
     ])
+
+    const allocation = container.querySelector(
+      'section[aria-labelledby="allocation-heading"]'
+    )
+    expect(allocation).toBeInstanceOf(HTMLElement)
+    expect(allocation?.querySelector("h2")?.textContent).toBe(
+      "Allocation comparison"
+    )
+
+    const allocationHeadings = Array.from(
+      allocation?.querySelectorAll("thead th") ?? [],
+      (heading) => heading.textContent
+    )
+    expect(allocationHeadings).toEqual([
+      "Asset class",
+      "Current",
+      "Target",
+      "Deviation"
+    ])
+
+    const allocationRows = allocation?.querySelectorAll("tbody tr") ?? []
+    expect(
+      Array.from(allocationRows, (row) =>
+        Array.from(row.children, (cell) => cell.textContent)
+      )
+    ).toEqual([
+      ["Equity", "14.8%", "45.0%", "-30.2%"],
+      ["Government bond", "50.7%", "25.0%", "25.7%"],
+      ["Corporate bond", "8.7%", "15.0%", "-6.3%"],
+      ["Commodity", "8.5%", "7.0%", "1.5%"],
+      ["Cash", "17.2%", "8.0%", "9.2%"]
+    ])
   })
 
   it("renders the response status when the fixture request fails", async () => {

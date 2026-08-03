@@ -4,6 +4,7 @@ import { Effect } from "effect"
 import { useEffect, useState } from "react"
 
 import { positionsWithWeights } from "../../lib/analytics/allocation"
+import { suitabilityReport } from "../../lib/analytics/suitability"
 import type { MiFIDProfile } from "../../lib/domain/mifid"
 import type { Portfolio } from "../../lib/domain/portfolio"
 import { formatEUR } from "../../lib/format/currency"
@@ -174,6 +175,10 @@ export default function CustomerPage() {
   }
 
   const weightedPositions = positionsWithWeights(state.portfolio.positions)
+  const allocationDeviations = suitabilityReport(
+    state.portfolio,
+    state.customer
+  ).deviations
 
   return (
     <main style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}>
@@ -212,6 +217,33 @@ export default function CustomerPage() {
                 <td>{formatPercent(weightPct)}</td>
               </tr>
             ))}
+          </tbody>
+        </table>
+      </section>
+      <section aria-labelledby="allocation-heading">
+        <h2 id="allocation-heading">Allocation comparison</h2>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Asset class</th>
+              <th scope="col">Current</th>
+              <th scope="col">Target</th>
+              <th scope="col">Deviation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allocationDeviations.map(
+              ({ assetClass, actualPct, targetPct, deviationPct }) => (
+                <tr key={assetClass}>
+                  <th scope="row">
+                    {formatUnderscoreDelimitedIdentifier(assetClass)}
+                  </th>
+                  <td>{formatPercent(actualPct)}</td>
+                  <td>{formatPercent(targetPct)}</td>
+                  <td>{formatPercent(deviationPct)}</td>
+                </tr>
+              )
+            )}
           </tbody>
         </table>
       </section>
