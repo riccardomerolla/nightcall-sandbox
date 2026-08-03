@@ -58,6 +58,36 @@ describe("CustomerPage", () => {
     expect(container.textContent).toContain(
       "Customer data loaded for C-000451."
     )
+
+    const profileHeader = container.querySelector("header")
+    expect(profileHeader).toBeInstanceOf(HTMLElement)
+    if (!(profileHeader instanceof HTMLElement)) {
+      throw new Error("Expected the loaded customer profile header")
+    }
+
+    const customerName = profileHeader.querySelector("h1")
+    expect(customerName?.id).toBe("customer-name")
+    expect(customerName?.textContent).toBe("Mario Rossi")
+    expect(profileHeader.getAttribute("aria-labelledby")).toBe(customerName?.id)
+
+    const profileDetails = profileHeader.querySelector("dl")
+    expect(profileDetails).toBeInstanceOf(HTMLDListElement)
+
+    const definitionFor = (term: string) => {
+      const definitionTerm = Array.from(
+        profileDetails?.querySelectorAll(":scope > dt") ?? []
+      ).find((element) => element.textContent === term)
+
+      expect(definitionTerm).toBeInstanceOf(HTMLElement)
+      expect(definitionTerm?.nextElementSibling).toBeInstanceOf(HTMLElement)
+      expect(definitionTerm?.nextElementSibling?.tagName).toBe("DD")
+
+      return definitionTerm?.nextElementSibling?.textContent
+    }
+
+    expect(definitionFor("Risk profile")).toBe("Balanced")
+    expect(definitionFor("Investment horizon")).toBe("8 years")
+    expect(definitionFor("Objectives")).toBe("Capital growth, Retirement")
   })
 
   it("renders the response status when the fixture request fails", async () => {
@@ -73,6 +103,28 @@ describe("CustomerPage", () => {
     expect(container.querySelector('[role="alert"]')?.textContent).toBe(
       "The customer data could not be loaded: Customer request failed (503)"
     )
+  })
+
+  it("uses singular grammar for a one-year investment horizon", async () => {
+    const oneYearFixture = JSON.parse(fixture) as Record<string, unknown>
+    oneYearFixture.investmentHorizonYears = 1
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>().mockResolvedValue(
+        new Response(JSON.stringify(oneYearFixture), { status: 200 })
+      )
+    )
+
+    await act(async () => {
+      root.render(createElement(CustomerPage))
+      await flushPromises()
+    })
+
+    const investmentHorizonTerm = Array.from(
+      container.querySelectorAll("dt")
+    ).find((element) => element.textContent === "Investment horizon")
+
+    expect(investmentHorizonTerm?.nextElementSibling?.textContent).toBe("1 year")
   })
 
   it("renders the importer diagnostic when the fixture is malformed", async () => {

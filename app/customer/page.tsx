@@ -34,6 +34,14 @@ const errorMessage = (cause: unknown) => {
   return typeof cause === "string" ? cause : "An unknown error occurred"
 }
 
+const formatUnderscoreDelimitedIdentifier = (identifier: string) =>
+  identifier
+    .replaceAll("_", " ")
+    .replace(/^./, (firstCharacter) => firstCharacter.toUpperCase())
+
+const formatInvestmentHorizon = (years: number) =>
+  `${years} ${years === 1 ? "year" : "years"}`
+
 const loadCustomer = async (signal: AbortSignal): Promise<CustomerState> => {
   let source: string
 
@@ -109,8 +117,23 @@ export default function CustomerPage() {
 
   return (
     <main style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}>
-      <h1>Customer dashboard</h1>
-      <p>Customer data loaded for {state.customer.customerId}.</p>
+      <header aria-labelledby="customer-name">
+        <p>Customer profile</p>
+        <h1 id="customer-name">{state.customer.fullName}</h1>
+        <p>Customer data loaded for {state.customer.customerId}.</p>
+        <dl>
+          <dt>Risk profile</dt>
+          <dd>{formatUnderscoreDelimitedIdentifier(state.customer.riskProfile)}</dd>
+          <dt>Investment horizon</dt>
+          <dd>{formatInvestmentHorizon(state.customer.investmentHorizonYears)}</dd>
+          <dt>Objectives</dt>
+          <dd>
+            {state.customer.objectives
+              .map(formatUnderscoreDelimitedIdentifier)
+              .join(", ")}
+          </dd>
+        </dl>
+      </header>
     </main>
   )
 }
