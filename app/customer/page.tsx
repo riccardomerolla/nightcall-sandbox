@@ -1,10 +1,14 @@
 "use client"
 
 import { Effect } from "effect"
+import Link from "next/link"
 import { useEffect, useState } from "react"
 
 import { positionsWithWeights } from "../../lib/analytics/allocation"
-import { suitabilityReport } from "../../lib/analytics/suitability"
+import {
+  suitabilityReport,
+  type SuitabilityViolation
+} from "../../lib/analytics/suitability"
 import type { MiFIDProfile } from "../../lib/domain/mifid"
 import type { Portfolio } from "../../lib/domain/portfolio"
 import { formatEUR } from "../../lib/format/currency"
@@ -53,6 +57,19 @@ const formatUnderscoreDelimitedIdentifier = (identifier: string) =>
 
 const formatInvestmentHorizon = (years: number) =>
   `${years} ${years === 1 ? "year" : "years"}`
+
+const describeSuitabilityViolation = (violation: SuitabilityViolation): string => {
+  switch (violation.constraint) {
+    case "maxSinglePositionPct":
+      return `${violation.position.name} is ${formatPercent(violation.actualPct)} of the portfolio, above the ${formatPercent(violation.limitPct)} maximum.`
+    case "minCashPct":
+      return `Cash is ${formatPercent(violation.actualPct)} of the portfolio, below the ${formatPercent(violation.limitPct)} minimum.`
+    default: {
+      const unhandledViolation: never = violation
+      return unhandledViolation
+    }
+  }
+}
 
 const fetchFixture = async (
   url: string,
@@ -175,10 +192,10 @@ export default function CustomerPage() {
   }
 
   const weightedPositions = positionsWithWeights(state.portfolio.positions)
-  const allocationDeviations = suitabilityReport(
+  const suitability = suitabilityReport(
     state.portfolio,
     state.customer
-  ).deviations
+  )
 
   return (
     <main style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}>
@@ -232,7 +249,7 @@ export default function CustomerPage() {
             </tr>
           </thead>
           <tbody>
-            {allocationDeviations.map(
+            {suitability.deviations.map(
               ({ assetClass, actualPct, targetPct, deviationPct }) => (
                 <tr key={assetClass}>
                   <th scope="row">
@@ -246,6 +263,29 @@ export default function CustomerPage() {
             )}
           </tbody>
         </table>
+      </section>
+      <section aria-labelledby="suitability-heading">
+        <h2 id="suitability-heading">Suitability violations</h2>
+        {suitability.violations.length === 0 ? (
+          <p>No suitability violations detected.</p>
+        ) : (
+          <ul>
+            {suitability.violations.map((violation) => (
+              <li
+                key={
+                  violation.constraint === "maxSinglePositionPct"
+                    ? `${violation.constraint}-${violation.position.isin}`
+                    : violation.constraint
+                }
+              >
+                {describeSuitabilityViolation(violation)}
+              </li>
+            ))}
+          </ul>
+        )}
+        <p>
+          <Link href="/proposal">View rebalancing proposal</Link>
+        </p>
       </section>
     </main>
   )

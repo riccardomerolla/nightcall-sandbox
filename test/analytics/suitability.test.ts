@@ -3,7 +3,10 @@ import { readFileSync } from "node:fs"
 import { Effect } from "effect"
 import { describe, expect, it } from "vitest"
 
-import { suitabilityReport } from "../../lib/analytics/suitability"
+import {
+  detectSuitabilityViolations,
+  suitabilityReport
+} from "../../lib/analytics/suitability"
 import {
   MiFIDConstraints,
   MiFIDProfile,
@@ -69,6 +72,35 @@ const profile = (
     objectives: ["capital_growth"],
     constraints: new MiFIDConstraints(constraints)
   })
+
+describe("detectSuitabilityViolations", () => {
+  it("returns violations independently of the allocation report", () => {
+    const oversizedPosition = position("equity", 80, "EQUITY-80")
+    const portfolio = new Portfolio({
+      positions: [oversizedPosition, position("cash", 20)]
+    })
+
+    expect(
+      detectSuitabilityViolations(
+        portfolio,
+        profile("balanced", { maxSinglePositionPct: 50, minCashPct: 25 })
+      )
+    ).toEqual([
+      {
+        constraint: "maxSinglePositionPct",
+        position: oversizedPosition,
+        actualPct: 80,
+        limitPct: 50
+      },
+      {
+        constraint: "minCashPct",
+        assetClass: "cash",
+        actualPct: 20,
+        limitPct: 25
+      }
+    ])
+  })
+})
 
 describe("suitabilityReport", () => {
   it("reports allocation deviations against the target for the selected risk profile", () => {

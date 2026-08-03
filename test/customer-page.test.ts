@@ -180,6 +180,98 @@ describe("CustomerPage", () => {
       ["Commodity", "8.5%", "7.0%", "1.5%"],
       ["Cash", "17.2%", "8.0%", "9.2%"]
     ])
+
+    const suitability = container.querySelector(
+      'section[aria-labelledby="suitability-heading"]'
+    )
+    expect(suitability).toBeInstanceOf(HTMLElement)
+    expect(suitability?.querySelector("h2")?.textContent).toBe(
+      "Suitability violations"
+    )
+    expect(
+      Array.from(
+        suitability?.querySelectorAll("li") ?? [],
+        (violation) => violation.textContent
+      )
+    ).toEqual([
+      "iShares Core Euro Government Bond UCITS ETF is 39.7% of the portfolio, above the 25.0% maximum."
+    ])
+    expect(suitability?.querySelector("a")?.textContent).toBe(
+      "View rebalancing proposal"
+    )
+    expect(suitability?.querySelector("a")?.getAttribute("href")).toBe(
+      "/proposal"
+    )
+  })
+
+  it("renders the suitability empty state when the portfolio has no violations", async () => {
+    const unconstrainedFixture = JSON.parse(customerFixture) as Record<
+      string,
+      unknown
+    >
+    unconstrainedFixture.constraints = {
+      maxSinglePositionPct: 100,
+      minCashPct: 0
+    }
+    vi.stubGlobal(
+      "fetch",
+      createFixtureFetchMock({
+        customer: () =>
+          new Response(JSON.stringify(unconstrainedFixture), { status: 200 })
+      })
+    )
+
+    await act(async () => {
+      root.render(createElement(CustomerPage))
+      await flushPromises()
+    })
+
+    const suitability = container.querySelector(
+      'section[aria-labelledby="suitability-heading"]'
+    )
+    expect(suitability?.textContent).toContain(
+      "No suitability violations detected."
+    )
+    expect(suitability?.querySelector("li")).toBeNull()
+    expect(suitability?.querySelector("a")?.getAttribute("href")).toBe(
+      "/proposal"
+    )
+  })
+
+  it("renders position and minimum-cash violations in report order", async () => {
+    const lowCashFixture = JSON.parse(customerFixture) as Record<
+      string,
+      unknown
+    >
+    lowCashFixture.constraints = {
+      maxSinglePositionPct: 25,
+      minCashPct: 20
+    }
+    vi.stubGlobal(
+      "fetch",
+      createFixtureFetchMock({
+        customer: () =>
+          new Response(JSON.stringify(lowCashFixture), { status: 200 })
+      })
+    )
+
+    await act(async () => {
+      root.render(createElement(CustomerPage))
+      await flushPromises()
+    })
+
+    const suitability = container.querySelector(
+      'section[aria-labelledby="suitability-heading"]'
+    )
+    expect(
+      Array.from(
+        suitability?.querySelectorAll("li") ?? [],
+        (violation) => violation.textContent
+      )
+    ).toEqual([
+      "iShares Core Euro Government Bond UCITS ETF is 39.7% of the portfolio, above the 25.0% maximum.",
+      "Cash is 17.2% of the portfolio, below the 20.0% minimum."
+    ])
   })
 
   it("renders the response status when the fixture request fails", async () => {

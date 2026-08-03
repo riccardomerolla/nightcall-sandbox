@@ -64,6 +64,43 @@ const fallsBelowMinimumBeyondTolerance = (
 ): boolean =>
   minimumPct - actualPct > PERCENTAGE_COMPARISON_TOLERANCE_PCT
 
+export const detectSuitabilityViolations = (
+  portfolio: Portfolio,
+  mifidProfile: MiFIDProfile
+): ReadonlyArray<SuitabilityViolation> => {
+  const positionLimitPct = mifidProfile.constraints.maxSinglePositionPct
+  const positionViolations: ReadonlyArray<SuitabilityViolation> =
+    positionsWithWeights(portfolio.positions).flatMap(
+      ({ position, weightPct: actualPct }) =>
+        exceedsMaximumBeyondTolerance(actualPct, positionLimitPct)
+          ? [
+            {
+              constraint: "maxSinglePositionPct",
+              position,
+              actualPct,
+              limitPct: positionLimitPct
+            }
+          ]
+          : []
+    )
+
+  const actualCashPct = allocationByAssetClass(portfolio.positions).cash
+  const minimumCashPct = mifidProfile.constraints.minCashPct
+  const cashViolation: ReadonlyArray<SuitabilityViolation> =
+    fallsBelowMinimumBeyondTolerance(actualCashPct, minimumCashPct)
+      ? [
+        {
+          constraint: "minCashPct",
+          assetClass: "cash",
+          actualPct: actualCashPct,
+          limitPct: minimumCashPct
+        }
+      ]
+      : []
+
+  return [...positionViolations, ...cashViolation]
+}
+
 export const suitabilityReport = (
   portfolio: Portfolio,
   mifidProfile: MiFIDProfile
@@ -71,33 +108,6 @@ export const suitabilityReport = (
   const actualAllocation = allocationByAssetClass(portfolio.positions)
   const targetAllocation =
     MODEL_TARGET_ALLOCATION_PERCENTAGES[mifidProfile.riskProfile]
-  const positionLimitPct = mifidProfile.constraints.maxSinglePositionPct
-  const positionViolations: ReadonlyArray<SuitabilityViolation> =
-    positionsWithWeights(portfolio.positions).flatMap(
-      ({ position, weightPct: actualPct }) =>
-        exceedsMaximumBeyondTolerance(actualPct, positionLimitPct)
-        ? [
-          {
-            constraint: "maxSinglePositionPct",
-            position,
-            actualPct,
-            limitPct: positionLimitPct
-          }
-        ]
-        : []
-    )
-  const minimumCashPct = mifidProfile.constraints.minCashPct
-  const cashViolation: ReadonlyArray<SuitabilityViolation> =
-    fallsBelowMinimumBeyondTolerance(actualAllocation.cash, minimumCashPct)
-      ? [
-        {
-          constraint: "minCashPct",
-          assetClass: "cash",
-          actualPct: actualAllocation.cash,
-          limitPct: minimumCashPct
-        }
-      ]
-      : []
 
   return {
     deviations: modelAssetClasses.map((assetClass) => {
@@ -111,6 +121,6 @@ export const suitabilityReport = (
         deviationPct: zeroIfWithinDeviationTolerance(actualPct - targetPct)
       }
     }),
-    violations: [...positionViolations, ...cashViolation]
+    violations: detectSuitabilityViolations(portfolio, mifidProfile)
   }
 }

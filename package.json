@@ -8,8 +8,9 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
+    "test:export": "node --test test/static-export.test.mjs",
     "typecheck": "tsc --noEmit",
-    "gate": "npm run typecheck && npm run test"
+    "gate": "npm run typecheck && npm run test && npm run build && npm run test:export"
   },
   "dependencies": {
     "effect": "^4.0.0-beta.102",
