@@ -4,7 +4,7 @@ import test from "node:test"
 
 test("the customer proposal link resolves to an exported page", async () => {
   const proposalHtml = await readFile(
-    new URL("../out/proposal.html", import.meta.url),
+    new URL("../out/customer/proposal.html", import.meta.url),
     "utf8"
   )
 

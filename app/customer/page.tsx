@@ -284,7 +284,7 @@ export default function CustomerPage() {
           </ul>
         )}
         <p>
-          <Link href="/proposal">View rebalancing proposal</Link>
+          <Link href="/customer/proposal">View rebalancing proposal</Link>
         </p>
       </section>
     </main>

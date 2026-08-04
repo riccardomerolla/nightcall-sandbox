@@ -200,7 +200,7 @@ describe("CustomerPage", () => {
       "View rebalancing proposal"
     )
     expect(suitability?.querySelector("a")?.getAttribute("href")).toBe(
-      "/proposal"
+      "/customer/proposal"
     )
   })
 
@@ -234,7 +234,7 @@ describe("CustomerPage", () => {
     )
     expect(suitability?.querySelector("li")).toBeNull()
     expect(suitability?.querySelector("a")?.getAttribute("href")).toBe(
-      "/proposal"
+      "/customer/proposal"
     )
   })
 
