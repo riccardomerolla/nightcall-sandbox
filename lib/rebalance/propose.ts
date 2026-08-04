@@ -19,6 +19,9 @@ const INVESTABLE_ASSET_CLASSES = ASSET_CLASSES.filter(
   (assetClass) => assetClass !== "cash"
 )
 const MONEY_COMPARISON_TOLERANCE_EUR = 1e-8
+const MINIMUM_TRADE_AMOUNT_EUR = 500
+const IMMATERIAL_ADJUSTMENT_REASON =
+  "The adjustment is below the EUR 500 minimum trade amount."
 
 interface PositionPlanningState {
   readonly position: PortfolioPosition
@@ -60,6 +63,10 @@ const instrumentReference = (
   name: position.name,
   assetClass: position.assetClass
 })
+
+const isImmaterialAdjustment = (amountEUR: number): boolean =>
+  amountEUR <
+  MINIMUM_TRADE_AMOUNT_EUR - MONEY_COMPARISON_TOLERANCE_EUR
 
 const createPlanningState = (
   portfolio: Portfolio,
@@ -451,6 +458,15 @@ const applyPlannedSales = (
         continue
       }
 
+      if (isImmaterialAdjustment(plannedSale.amountEUR)) {
+        state.deferred.push({
+          instrument: instrumentReference(candidate.position),
+          amountEUR: plannedSale.amountEUR,
+          reason: IMMATERIAL_ADJUSTMENT_REASON
+        })
+        continue
+      }
+
       candidate.proposedValueEUR -= plannedSale.amountEUR
       const cashCredits = creditCash(
         state,
@@ -469,6 +485,16 @@ const applyPlannedSales = (
 
         if (amountEUR <= MONEY_COMPARISON_TOLERANCE_EUR) {
           break
+        }
+
+        if (isImmaterialAdjustment(amountEUR)) {
+          state.deferred.push({
+            instrument: instrumentReference(credit.candidate.position),
+            amountEUR,
+            reason: IMMATERIAL_ADJUSTMENT_REASON
+          })
+          remainingCashBuyEUR -= amountEUR
+          continue
         }
 
         state.trades.push({
@@ -520,7 +546,18 @@ const planPurchases = (
       state.deferred.push({
         assetClass,
         amountEUR: amountToBuyEUR,
-        reason: "No existing position is available for this asset class."
+        reason: isImmaterialAdjustment(amountToBuyEUR)
+          ? IMMATERIAL_ADJUSTMENT_REASON
+          : "No existing position is available for this asset class."
+      })
+      continue
+    }
+
+    if (isImmaterialAdjustment(amountToBuyEUR)) {
+      state.deferred.push({
+        instrument: instrumentReference(firstCandidate.position),
+        amountEUR: amountToBuyEUR,
+        reason: IMMATERIAL_ADJUSTMENT_REASON
       })
       continue
     }
@@ -550,6 +587,16 @@ const planPurchases = (
         continue
       }
 
+      if (isImmaterialAdjustment(amountEUR)) {
+        state.deferred.push({
+          instrument: instrumentReference(candidate.position),
+          amountEUR,
+          reason: IMMATERIAL_ADJUSTMENT_REASON
+        })
+        amountToBuyEUR -= amountEUR
+        continue
+      }
+
       candidate.proposedValueEUR += amountEUR
       debitCash(state, amountEUR)
       state.trades.push({
@@ -565,7 +612,9 @@ const planPurchases = (
       state.deferred.push({
         instrument: instrumentReference(firstCandidate.position),
         amountEUR: amountToBuyEUR,
-        reason: deferralReason
+        reason: isImmaterialAdjustment(amountToBuyEUR)
+          ? IMMATERIAL_ADJUSTMENT_REASON
+          : deferralReason
       })
     }
   }

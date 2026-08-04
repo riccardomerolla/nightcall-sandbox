@@ -35,16 +35,103 @@ const profile = (
 ): RebalancingProfile => ({ modelTarget, ...constraints })
 
 describe("proposeRebalancing", () => {
+  it("defers a sale below EUR 500 without changing the proposed allocation", () => {
+    const proposal = proposeRebalancing(
+      portfolio([
+        position("EQ", "equity", 5_400),
+        position("CASH", "cash", 4_600)
+      ]),
+      profile(
+        {
+          equity: 50,
+          government_bond: 0,
+          corporate_bond: 0,
+          commodity: 0,
+          cash: 50
+        },
+        { maxSinglePositionPct: 100, minCashPct: 0 }
+      )
+    )
+
+    expect(proposal.trades).toEqual([])
+    expect(proposal.deferred).toEqual([
+      {
+        instrument: { isin: "EQ", name: "EQ", assetClass: "equity" },
+        amountEUR: 400,
+        reason: "The adjustment is below the EUR 500 minimum trade amount."
+      }
+    ])
+    expect(proposal.afterAllocation).toEqual(proposal.beforeAllocation)
+  })
+
+  it("defers a purchase below EUR 500 without changing the proposed allocation", () => {
+    const proposal = proposeRebalancing(
+      portfolio([
+        position("EQ", "equity", 4_600),
+        position("CASH", "cash", 5_400)
+      ]),
+      profile(
+        {
+          equity: 50,
+          government_bond: 0,
+          corporate_bond: 0,
+          commodity: 0,
+          cash: 50
+        },
+        { maxSinglePositionPct: 100, minCashPct: 0 }
+      )
+    )
+
+    expect(proposal.trades).toEqual([])
+    expect(proposal.deferred).toEqual([
+      {
+        instrument: { isin: "EQ", name: "EQ", assetClass: "equity" },
+        amountEUR: 400,
+        reason: "The adjustment is below the EUR 500 minimum trade amount."
+      }
+    ])
+    expect(proposal.afterAllocation).toEqual(proposal.beforeAllocation)
+  })
+
+  it("executes an adjustment of exactly EUR 500", () => {
+    const proposal = proposeRebalancing(
+      portfolio([
+        position("EQ", "equity", 4_500),
+        position("CASH", "cash", 5_500)
+      ]),
+      profile(
+        {
+          equity: 50,
+          government_bond: 0,
+          corporate_bond: 0,
+          commodity: 0,
+          cash: 50
+        },
+        { maxSinglePositionPct: 100, minCashPct: 0 }
+      )
+    )
+
+    expect(proposal.trades).toContainEqual({
+      instrument: { isin: "EQ", name: "EQ", assetClass: "equity" },
+      action: "buy",
+      amountEUR: 500,
+      rationale: "Increase equity toward its target allocation."
+    })
+    expect(proposal.deferred).toEqual([])
+    expect(proposal.afterAllocation.equity).toBeCloseTo(50)
+    expect(proposal.afterAllocation.cash).toBeCloseTo(50)
+  })
+
   it("sells an oversized position below its asset-class target to satisfy the position limit", () => {
-    const oversizedPosition = position("GOV", "government_bond", 500)
+    const oversizedPosition = position("GOV", "government_bond", 5_000)
     const proposal = proposeRebalancing(
       portfolio([
         oversizedPosition,
-        position("EQ-1", "equity", 100),
-        position("EQ-2", "equity", 100),
-        position("EQ-3", "equity", 100),
-        position("EQ-4", "equity", 100),
-        position("CASH", "cash", 100)
+        position("EQ-1", "equity", 1_000),
+        position("EQ-2", "equity", 1_000),
+        position("EQ-3", "equity", 1_000),
+        position("EQ-4", "equity", 1_000),
+        position("CASH", "cash", 1_000)
       ]),
       profile(
         {
@@ -67,7 +154,7 @@ describe("proposeRebalancing", () => {
         assetClass: "government_bond"
       },
       action: "sell",
-      amountEUR: 350,
+      amountEUR: 3_500,
       rationale:
         "Reduce government bond to satisfy the single-position limit."
     })
@@ -84,7 +171,7 @@ describe("proposeRebalancing", () => {
         name: "GOV",
         assetClass: "government_bond"
       },
-      amountEUR: 100,
+      amountEUR: 1_000,
       reason: "The single-position limit prevents this adjustment."
     })
   })
@@ -92,9 +179,9 @@ describe("proposeRebalancing", () => {
   it("uses the combined balance of every cash position as purchase capacity", () => {
     const proposal = proposeRebalancing(
       portfolio([
-        position("EQ", "equity", 200),
-        position("CASH-1", "cash", 100),
-        position("CASH-2", "cash", 100)
+        position("EQ", "equity", 2_000),
+        position("CASH-1", "cash", 1_000),
+        position("CASH-2", "cash", 1_000)
       ]),
       profile(
         {
@@ -112,7 +199,7 @@ describe("proposeRebalancing", () => {
       {
         instrument: { isin: "EQ", name: "EQ", assetClass: "equity" },
         action: "buy",
-        amountEUR: 100,
+        amountEUR: 1_000,
         rationale: "Increase equity toward its target allocation."
       }
     ])
@@ -124,8 +211,8 @@ describe("proposeRebalancing", () => {
   it("preserves and reinvests sale proceeds when the portfolio has no cash position", () => {
     const proposal = proposeRebalancing(
       portfolio([
-        position("EQ", "equity", 800),
-        position("GOV", "government_bond", 200)
+        position("EQ", "equity", 8_000),
+        position("GOV", "government_bond", 2_000)
       ]),
       profile(
         {
@@ -144,8 +231,8 @@ describe("proposeRebalancing", () => {
       isin: instrument.isin,
       amountEUR
     }))).toEqual([
-      { action: "sell", isin: "EQ", amountEUR: 300 },
-      { action: "buy", isin: "GOV", amountEUR: 300 }
+      { action: "sell", isin: "EQ", amountEUR: 3_000 },
+      { action: "buy", isin: "GOV", amountEUR: 3_000 }
     ])
     expect(proposal.afterAllocation).toEqual({
       equity: 50,
@@ -159,8 +246,8 @@ describe("proposeRebalancing", () => {
   it("defers a target allocation when its asset class has no existing position", () => {
     const proposal = proposeRebalancing(
       portfolio([
-        position("EQ", "equity", 500),
-        position("CASH", "cash", 500)
+        position("EQ", "equity", 5_000),
+        position("CASH", "cash", 5_000)
       ]),
       profile(
         {
@@ -176,7 +263,7 @@ describe("proposeRebalancing", () => {
 
     expect(proposal.deferred).toContainEqual({
       assetClass: "government_bond",
-      amountEUR: 200,
+      amountEUR: 2_000,
       reason: "No existing position is available for this asset class."
     })
     expect(
@@ -190,11 +277,11 @@ describe("proposeRebalancing", () => {
   it("raises cash to a minimum above the model cash target", () => {
     const proposal = proposeRebalancing(
       portfolio([
-        position("EQ", "equity", 450),
-        position("GOV", "government_bond", 250),
-        position("CORP", "corporate_bond", 150),
-        position("COM", "commodity", 70),
-        position("CASH", "cash", 80)
+        position("EQ", "equity", 4_500),
+        position("GOV", "government_bond", 2_500),
+        position("CORP", "corporate_bond", 1_500),
+        position("COM", "commodity", 700),
+        position("CASH", "cash", 800)
       ]),
       profile(
         {
@@ -211,13 +298,13 @@ describe("proposeRebalancing", () => {
     expect(proposal.trades).toContainEqual({
       instrument: { isin: "EQ", name: "EQ", assetClass: "equity" },
       action: "sell",
-      amountEUR: 120,
+      amountEUR: 1_200,
       rationale: "Increase cash to satisfy the minimum cash allocation."
     })
     expect(proposal.trades).toContainEqual({
       instrument: { isin: "CASH", name: "CASH", assetClass: "cash" },
       action: "buy",
-      amountEUR: 120,
+      amountEUR: 1_200,
       rationale: "Increase cash to satisfy the minimum cash allocation."
     })
     expect(proposal.afterAllocation.cash).toBeCloseTo(20)
@@ -229,19 +316,19 @@ describe("proposeRebalancing", () => {
     })
     expect(proposal.deferred).toContainEqual({
       instrument: { isin: "EQ", name: "EQ", assetClass: "equity" },
-      amountEUR: 120,
+      amountEUR: 1_200,
       reason: "The minimum cash allocation prevents this adjustment."
     })
   })
 
   it("sells an oversized cash position without reducing total cash", () => {
-    const cash = position("CASH", "cash", 300)
+    const cash = position("CASH", "cash", 3_000)
     const proposal = proposeRebalancing(
       portfolio([
-        position("EQ", "equity", 250),
-        position("GOV", "government_bond", 200),
-        position("CORP", "corporate_bond", 150),
-        position("COM", "commodity", 100),
+        position("EQ", "equity", 2_500),
+        position("GOV", "government_bond", 2_000),
+        position("CORP", "corporate_bond", 1_500),
+        position("COM", "commodity", 1_000),
         cash
       ]),
       profile(
@@ -260,7 +347,7 @@ describe("proposeRebalancing", () => {
       {
         instrument: { isin: "CASH", name: "CASH", assetClass: "cash" },
         action: "sell",
-        amountEUR: 50,
+        amountEUR: 500,
         rationale: "Reduce cash to satisfy the single-position limit."
       }
     ])
