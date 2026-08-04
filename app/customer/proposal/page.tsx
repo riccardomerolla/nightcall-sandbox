@@ -16,6 +16,7 @@ import { importMiFIDJson } from "../../../lib/importers/mifid-json"
 import { importPortfolioCsv } from "../../../lib/importers/portfolio-csv"
 import { proposeRebalancing } from "../../../lib/rebalance/propose"
 import type { RebalancingProposal } from "../../../lib/rebalance/types"
+import styles from "../customer.module.css"
 
 const customerFixtureUrl = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/fixtures/mifid-mario-rossi.json`
 const portfolioFixtureUrl = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/fixtures/portfolio-mario-rossi.csv`
@@ -157,8 +158,10 @@ const loadProposal = async (signal: AbortSignal): Promise<ProposalState> => {
 }
 
 const BackToDashboardLink = () => (
-  <p>
-    <Link href="/customer">Back to customer dashboard</Link>
+  <p className={styles.stateNavigation}>
+    <Link className={styles.backLink} href="/customer">
+      Back to customer dashboard
+    </Link>
   </p>
 )
 
@@ -181,11 +184,15 @@ export default function ProposalPage() {
     return (
       <main
         aria-busy="true"
-        style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}
+        className={`${styles.dashboard} ${styles.statePage}`}
       >
-        <h1>Rebalancing proposal</h1>
-        <p role="status">Loading customer data…</p>
-        <BackToDashboardLink />
+        <div className="feedback-card">
+          <h1 className={styles.stateTitle}>Rebalancing proposal</h1>
+          <p className={styles.stateMessage} role="status">
+            Loading customer data…
+          </p>
+          <BackToDashboardLink />
+        </div>
       </main>
     )
   }
@@ -198,10 +205,14 @@ export default function ProposalPage() {
         : `The ${sourceLabel} data is invalid: ${state.message}`
 
     return (
-      <main style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}>
-        <h1>Unable to load {sourceLabel}</h1>
-        <p role="alert">{errorDescription}</p>
-        <BackToDashboardLink />
+      <main className={`${styles.dashboard} ${styles.statePage}`}>
+        <div className="feedback-card">
+          <h1 className={styles.stateTitle}>Unable to load {sourceLabel}</h1>
+          <p className={styles.stateMessage} role="alert">
+            {errorDescription}
+          </p>
+          <BackToDashboardLink />
+        </div>
       </main>
     )
   }
@@ -212,17 +223,29 @@ export default function ProposalPage() {
   )
 
   return (
-    <main style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}>
-      <header>
-        <p>Customer proposal</p>
-        <h1>Rebalancing proposal</h1>
-        <p>Prepared for {state.customer.fullName}.</p>
+    <main className={styles.dashboard}>
+      <header
+        aria-labelledby="proposal-title"
+        className={styles.proposalHeader}
+      >
+        <div>
+          <p className={styles.eyebrow}>Customer proposal</p>
+          <h1 className={styles.customerName} id="proposal-title">
+            Rebalancing proposal
+          </h1>
+          <p className={styles.customerReference}>
+            Prepared for {state.customer.fullName}.
+          </p>
+        </div>
         <BackToDashboardLink />
       </header>
 
-      <section aria-labelledby="allocation-heading">
+      <section
+        aria-labelledby="allocation-heading"
+        className={`${styles.dataSection} ${styles.proposalSection}`}
+      >
         <h2 id="allocation-heading">Allocation comparison</h2>
-        <table>
+        <table className={styles.responsiveTable}>
           <thead>
             <tr>
               <th scope="col">Asset class</th>
@@ -233,35 +256,51 @@ export default function ProposalPage() {
           <tbody>
             {ASSET_CLASSES.map((assetClass) => (
               <tr key={assetClass}>
-                <th scope="row">
+                <th data-label="Asset class" scope="row">
                   {formatUnderscoreDelimitedIdentifier(assetClass)}
                 </th>
-                <td>{formatPercent(state.proposal.beforeAllocation[assetClass])}</td>
-                <td>{formatPercent(state.proposal.afterAllocation[assetClass])}</td>
+                <td data-label="Before">
+                  {formatPercent(state.proposal.beforeAllocation[assetClass])}
+                </td>
+                <td data-label="After">
+                  {formatPercent(state.proposal.afterAllocation[assetClass])}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </section>
 
-      <section aria-labelledby="summary-heading">
+      <section
+        aria-labelledby="summary-heading"
+        className={`${styles.dataSection} ${styles.proposalSection}`}
+      >
         <h2 id="summary-heading">Proposal summary</h2>
-        <dl>
-          <dt>Trade count</dt>
-          <dd>{state.proposal.trades.length}</dd>
-          <dt>Total turnover</dt>
-          <dd>{formatEUR(totalTurnover)}</dd>
-          <dt>Resulting cash allocation</dt>
-          <dd>{formatPercent(state.proposal.afterAllocation.cash)}</dd>
+        <dl className={styles.proposalSummary}>
+          <div>
+            <dt>Trade count</dt>
+            <dd>{state.proposal.trades.length}</dd>
+          </div>
+          <div>
+            <dt>Total turnover</dt>
+            <dd>{formatEUR(totalTurnover)}</dd>
+          </div>
+          <div>
+            <dt>Resulting cash allocation</dt>
+            <dd>{formatPercent(state.proposal.afterAllocation.cash)}</dd>
+          </div>
         </dl>
       </section>
 
-      <section aria-labelledby="trades-heading">
+      <section
+        aria-labelledby="trades-heading"
+        className={`${styles.dataSection} ${styles.proposalSection}`}
+      >
         <h2 id="trades-heading">Proposed trades</h2>
         {state.proposal.trades.length === 0 ? (
           <p className="empty-state feedback-card">No trades are proposed.</p>
         ) : (
-          <table>
+          <table className={styles.responsiveTable}>
             <thead>
               <tr>
                 <th scope="col">Action</th>
@@ -273,10 +312,14 @@ export default function ProposalPage() {
             <tbody>
               {state.proposal.trades.map((trade) => (
                 <tr key={`${trade.action}-${trade.instrument.isin}`}>
-                  <td>{formatUnderscoreDelimitedIdentifier(trade.action)}</td>
-                  <th scope="row">{trade.instrument.name}</th>
-                  <td>{formatEUR(trade.amountEUR)}</td>
-                  <td>{trade.rationale}</td>
+                  <td data-label="Action">
+                    {formatUnderscoreDelimitedIdentifier(trade.action)}
+                  </td>
+                  <th data-label="Instrument" scope="row">
+                    {trade.instrument.name}
+                  </th>
+                  <td data-label="Amount">{formatEUR(trade.amountEUR)}</td>
+                  <td data-label="Rationale">{trade.rationale}</td>
                 </tr>
               ))}
             </tbody>
@@ -284,14 +327,17 @@ export default function ProposalPage() {
         )}
       </section>
 
-      <section aria-labelledby="deferred-heading">
+      <section
+        aria-labelledby="deferred-heading"
+        className={`${styles.dataSection} ${styles.proposalSection}`}
+      >
         <h2 id="deferred-heading">Deferred adjustments</h2>
         {state.proposal.deferred.length === 0 ? (
           <p className="empty-state feedback-card">
             No adjustments are deferred.
           </p>
         ) : (
-          <table>
+          <table className={styles.responsiveTable}>
             <thead>
               <tr>
                 <th scope="col">Instrument</th>
@@ -302,9 +348,13 @@ export default function ProposalPage() {
             <tbody>
               {state.proposal.deferred.map((adjustment) => (
                 <tr key={deferredAdjustmentKey(adjustment)}>
-                  <th scope="row">{deferredAdjustmentLabel(adjustment)}</th>
-                  <td>{formatEUR(adjustment.amountEUR)}</td>
-                  <td>{adjustment.reason}</td>
+                  <th data-label="Instrument" scope="row">
+                    {deferredAdjustmentLabel(adjustment)}
+                  </th>
+                  <td data-label="Amount">
+                    {formatEUR(adjustment.amountEUR)}
+                  </td>
+                  <td data-label="Reason">{adjustment.reason}</td>
                 </tr>
               ))}
             </tbody>

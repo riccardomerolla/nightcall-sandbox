@@ -11,6 +11,7 @@ vi.hoisted(() => {
 })
 
 import ProposalPage from "../app/customer/proposal/page"
+import ProposalPlaceholderPage from "../app/proposal/page"
 
 const customerFixture = readFileSync("fixtures/mifid-mario-rossi.json", "utf8")
 const portfolioFixture = readFileSync(
@@ -82,6 +83,9 @@ describe("ProposalPage", () => {
     expect(container.querySelector('[role="status"]')?.textContent).toBe(
       "Loading customer data…"
     )
+    expect(
+      container.querySelector('[role="status"]')?.closest(".feedback-card")
+    ).not.toBeNull()
     expect(container.querySelector("a")?.getAttribute("href")).toBe("/customer")
 
     await act(async () => {
@@ -103,6 +107,9 @@ describe("ProposalPage", () => {
       "Back to customer dashboard"
     )
     expect(container.querySelector("a")?.getAttribute("href")).toBe("/customer")
+    expect(
+      container.querySelector("header")?.getAttribute("aria-labelledby")
+    ).toBe("proposal-title")
 
     const allocation = container.querySelector(
       'section[aria-labelledby="allocation-heading"]'
@@ -114,6 +121,12 @@ describe("ProposalPage", () => {
       ["Commodity", "8.5%", "7.0%"],
       ["Cash", "17.2%", "8.0%"]
     ])
+    expect(
+      Array.from(
+        allocation?.querySelector("tbody tr")?.children ?? [],
+        (cell) => cell.getAttribute("data-label")
+      )
+    ).toEqual(["Asset class", "Before", "After"])
 
     const summary = container.querySelector(
       'section[aria-labelledby="summary-heading"]'
@@ -157,6 +170,12 @@ describe("ProposalPage", () => {
         "Increase corporate bond toward its target allocation."
       ]
     ])
+    expect(
+      Array.from(
+        trades?.querySelector("tbody tr")?.children ?? [],
+        (cell) => cell.getAttribute("data-label")
+      )
+    ).toEqual(["Action", "Instrument", "Amount", "Rationale"])
 
     const deferred = container.querySelector(
       'section[aria-labelledby="deferred-heading"]'
@@ -260,6 +279,31 @@ describe("ProposalPage", () => {
     expect(container.querySelector('[role="alert"]')?.textContent).toContain(
       "The customer data is invalid: Invalid JSON:"
     )
+    expect(
+      container.querySelector('[role="alert"]')?.closest(".feedback-card")
+    ).not.toBeNull()
+    expect(container.querySelector("a")?.getAttribute("href")).toBe("/customer")
+  })
+
+  it("preserves customer request errors and back navigation", async () => {
+    vi.stubGlobal(
+      "fetch",
+      createFixtureFetchMock({
+        customer: () => new Response(null, { status: 503 })
+      })
+    )
+
+    await act(async () => {
+      root.render(createElement(ProposalPage))
+      await flushPromises()
+    })
+
+    expect(container.querySelector("h1")?.textContent).toBe(
+      "Unable to load customer"
+    )
+    expect(container.querySelector('[role="alert"]')?.textContent).toBe(
+      "The customer data could not be loaded: Customer request failed (503)"
+    )
     expect(container.querySelector("a")?.getAttribute("href")).toBe("/customer")
   })
 
@@ -282,5 +326,43 @@ describe("ProposalPage", () => {
     expect(container.querySelector('[role="alert"]')?.textContent).toContain(
       "The portfolio data is invalid: Expected header"
     )
+  })
+
+  it("preserves portfolio request errors and back navigation", async () => {
+    vi.stubGlobal(
+      "fetch",
+      createFixtureFetchMock({
+        portfolio: () => new Response(null, { status: 502 })
+      })
+    )
+
+    await act(async () => {
+      root.render(createElement(ProposalPage))
+      await flushPromises()
+    })
+
+    expect(container.querySelector("h1")?.textContent).toBe(
+      "Unable to load portfolio"
+    )
+    expect(container.querySelector('[role="alert"]')?.textContent).toBe(
+      "The portfolio data could not be loaded: Portfolio request failed (502)"
+    )
+    expect(container.querySelector("a")?.getAttribute("href")).toBe("/customer")
+  })
+
+  it("renders the placeholder detail route in the shared feedback view", async () => {
+    await act(async () => root.render(createElement(ProposalPlaceholderPage)))
+
+    expect(container.querySelector("h1")?.textContent).toBe(
+      "Rebalancing proposal"
+    )
+    expect(container.textContent).toContain(
+      "The customer's rebalancing proposal will be available here."
+    )
+    expect(container.querySelector(".feedback-card")).not.toBeNull()
+    expect(container.querySelector("a")?.textContent).toBe(
+      "Back to customer dashboard"
+    )
+    expect(container.querySelector("a")?.getAttribute("href")).toBe("/customer")
   })
 })

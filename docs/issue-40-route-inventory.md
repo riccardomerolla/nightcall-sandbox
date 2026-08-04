@@ -38,16 +38,16 @@ is required for this slice.
 
 ## Detail and not-found routes
 
-| Source | Route or state | Initial status | Scope preserved during refresh |
+| Source | Route or state | Status | Scope preserved during refresh |
 | --- | --- | --- | --- |
-| `app/customer/proposal/page.tsx` | `/customer/proposal` loaded view | To update | Customer identity, allocation comparison, proposal summary, proposed trades, deferred adjustments, and back navigation. |
-| `app/customer/proposal/page.tsx` | `/customer/proposal` loading view | To update | Busy state, status announcement, back navigation, and asynchronous customer/portfolio loading behavior. |
-| `app/customer/proposal/page.tsx` | `/customer/proposal` customer request/data error views | To update | Error source and kind, diagnostic message, alert semantics, and back navigation. |
-| `app/customer/proposal/page.tsx` | `/customer/proposal` portfolio request/data error views | To update | Error source and kind, diagnostic message, alert semantics, and back navigation. |
-| `app/proposal/page.tsx` | `/proposal` placeholder detail view | To update | Placeholder copy and back navigation to the customer dashboard. |
-| Route tree | Route-level `not-found.*` view | Not present | No route-specific not-found view exists to refresh; Next.js supplies its default fallback. |
-| Route tree | Route-level `error.*` view | Not present | No route-level error boundary exists; the in-page error states above are the complete error-view inventory. |
-| `app/layout.tsx` | Root layout special view | To update with shared shell | Document language, metadata, global styles, and child rendering. This is the only special layout in the route tree. |
+| `app/customer/proposal/page.tsx` | `/customer/proposal` loaded view | Updated | Customer identity, allocation comparison, proposal summary, proposed trades, deferred adjustments, and back navigation. |
+| `app/customer/proposal/page.tsx` | `/customer/proposal` loading view | Updated | Busy state, status announcement, back navigation, and asynchronous customer/portfolio loading behavior. |
+| `app/customer/proposal/page.tsx` | `/customer/proposal` customer request/data error views | Updated | Error source and kind, diagnostic message, alert semantics, and back navigation. |
+| `app/customer/proposal/page.tsx` | `/customer/proposal` portfolio request/data error views | Updated | Error source and kind, diagnostic message, alert semantics, and back navigation. |
+| `app/proposal/page.tsx` | `/proposal` placeholder detail view | Updated | Placeholder copy and back navigation to the customer dashboard. |
+| Route tree | Route-level `not-found.*` view | Intentionally absent | No route-specific not-found view exists to refresh; Next.js supplies its default fallback. |
+| Route tree | Route-level `error.*` view | Intentionally absent | No route-level error boundary exists; the in-page error states above are the complete error-view inventory. |
+| `app/layout.tsx` | Root layout special view | Updated | Document language, metadata, global styles, application-shell class, and child rendering. This is the only special layout in the route tree. |
 
 ## Form and action routes
 
@@ -56,8 +56,8 @@ application route tree. No implementation work is required for this slice.
 
 ## Responsive route coverage
 
-The `/customer`, `/customer/proposal`, and `/proposal` routes, all of their
-states listed above, and the shared root layout must be verified at 375px,
-768px, and 1440px. Each `To update` entry will be changed to `Updated` after
-its behavior and responsive coverage are verified; absent and intentionally
-unaffected entries retain their stated final reasons.
+A final cross-route verification of `/customer`, `/customer/proposal`, and
+`/proposal`, all states listed above, and the shared root layout at 375px,
+768px, and 1440px remains for the responsive-coverage slice. The detail-route
+tables and summary now wrap or stack within the viewport at those widths;
+absent and intentionally unaffected entries retain their stated final reasons.
