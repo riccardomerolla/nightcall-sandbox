@@ -8,6 +8,8 @@ test("the customer proposal link resolves to an exported page", async () => {
     "utf8"
   )
 
-  assert.match(proposalHtml, /<h1>Rebalancing proposal<\/h1>/)
+  // Attribute-tolerant: restyled pages add classes to the heading, which
+  // must not fail the export check.
+  assert.match(proposalHtml, /<h1[^>]*>Rebalancing proposal<\/h1>/)
   assert.match(proposalHtml, /Back to customer dashboard/)
 })
