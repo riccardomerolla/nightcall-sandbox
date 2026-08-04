@@ -27,11 +27,18 @@ export default defineConfig({
   },
   projects: [
     {
+      name: "chromium-375",
+      testMatch: /mobile-navigation\.spec\.ts/,
+      use: { viewport: { width: 375, height: 812 } }
+    },
+    {
       name: "chromium-768",
+      testIgnore: /mobile-navigation\.spec\.ts/,
       use: { viewport: { width: 768, height: 900 } }
     },
     {
       name: "chromium-1440",
+      testIgnore: /mobile-navigation\.spec\.ts/,
       use: { viewport: { width: 1440, height: 900 } }
     }
   ]
