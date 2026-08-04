@@ -28,7 +28,7 @@ export default defineConfig({
   projects: [
     {
       name: "chromium-375",
-      testMatch: /mobile-navigation\.spec\.ts/,
+      testMatch: /(mobile-navigation|route-groups)\.spec\.ts/,
       use: { viewport: { width: 375, height: 812 } }
     },
     {
