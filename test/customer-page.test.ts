@@ -155,6 +155,27 @@ describe("CustomerPage", () => {
       )
     ).toEqual(["Instrument", "Market value", "Portfolio weight"])
 
+    const portfolioChart = container.querySelector(
+      ".portfolio-allocation-chart"
+    )
+    expect(portfolioChart?.querySelector("h2")?.textContent).toBe(
+      "Portfolio allocation"
+    )
+    expect(
+      Array.from(
+        portfolioChart?.querySelectorAll("svg rect") ?? [],
+        (segment) => segment.getAttribute("data-holding-id")
+      )
+    ).toEqual([
+      "IE00B4L5Y983",
+      "IE00B1FZS798",
+      "LU0908500753",
+      "IE00B579F325",
+      "IT0005433195",
+      "LU1681043599",
+      "CASH-EUR"
+    ])
+
     const allocation = container.querySelector(
       'section[aria-labelledby="allocation-heading"]'
     )

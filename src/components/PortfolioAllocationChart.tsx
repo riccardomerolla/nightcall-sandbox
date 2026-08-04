@@ -99,6 +99,7 @@ export const PortfolioAllocationChart = ({
               y="0"
               width={percentage}
               height="16"
+              rx="0.5"
               style={colourStyle(index)}
               aria-labelledby={labelId}
               data-holding-id={holding.isin}
