@@ -355,6 +355,7 @@ export default function CustomerPage() {
             <ul className={styles.violationList}>
               {suitability.violations.map((violation) => (
                 <li
+                  className={styles.violationItem}
                   key={
                     violation.constraint === "maxSinglePositionPct"
                       ? `${violation.constraint}-${violation.position.isin}`

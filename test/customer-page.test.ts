@@ -77,6 +77,9 @@ describe("CustomerPage", () => {
     expect(container.querySelector('[role="status"]')?.textContent).toBe(
       "Loading customer data…"
     )
+    expect(
+      container.querySelector('[role="status"]')?.closest(".feedback-card")
+    ).not.toBeNull()
     expect(fetchMock).toHaveBeenCalledWith(
       customerFixtureUrl,
       { signal: expect.any(AbortSignal) }
@@ -264,6 +267,9 @@ describe("CustomerPage", () => {
     expect(suitability?.textContent).toContain(
       "No suitability violations detected."
     )
+    expect(
+      suitability?.querySelector(".empty-state.feedback-card")
+    ).not.toBeNull()
     expect(suitability?.querySelector("li")).toBeNull()
     expect(container.querySelector("header a")?.getAttribute("href")).toBe(
       "/customer/proposal"
@@ -319,6 +325,9 @@ describe("CustomerPage", () => {
     expect(container.querySelector('[role="alert"]')?.textContent).toBe(
       "The customer data could not be loaded: Customer request failed (503)"
     )
+    expect(
+      container.querySelector('[role="alert"]')?.closest(".feedback-card")
+    ).not.toBeNull()
   })
 
   it("renders the response status when the portfolio request fails", async () => {

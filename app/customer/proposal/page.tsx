@@ -259,7 +259,7 @@ export default function ProposalPage() {
       <section aria-labelledby="trades-heading">
         <h2 id="trades-heading">Proposed trades</h2>
         {state.proposal.trades.length === 0 ? (
-          <p>No trades are proposed.</p>
+          <p className="empty-state feedback-card">No trades are proposed.</p>
         ) : (
           <table>
             <thead>
@@ -287,7 +287,9 @@ export default function ProposalPage() {
       <section aria-labelledby="deferred-heading">
         <h2 id="deferred-heading">Deferred adjustments</h2>
         {state.proposal.deferred.length === 0 ? (
-          <p>No adjustments are deferred.</p>
+          <p className="empty-state feedback-card">
+            No adjustments are deferred.
+          </p>
         ) : (
           <table>
             <thead>

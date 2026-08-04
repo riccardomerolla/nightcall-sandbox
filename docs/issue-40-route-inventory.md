@@ -26,15 +26,15 @@ is required for this slice.
 
 ## List and empty-state routes
 
-| Source | Route or state | Initial status | Scope preserved during refresh |
+| Source | Route or state | Status | Scope preserved during refresh |
 | --- | --- | --- | --- |
-| `app/customer/page.tsx` | `/customer` loaded view | To update | Customer and portfolio fixture loading, portfolio positions, allocation comparison, suitability report, and navigation to the customer proposal. |
-| `app/customer/page.tsx` | `/customer` loading view | To update | Busy state, status announcement, and asynchronous customer/portfolio loading behavior. |
-| `app/customer/page.tsx` | `/customer` customer request/data error views | To update | Error source and kind, diagnostic message, and alert semantics. |
-| `app/customer/page.tsx` | `/customer` portfolio request/data error views | To update | Error source and kind, diagnostic message, and alert semantics. |
-| `app/customer/page.tsx` | `/customer` suitability empty state | To update | The no-violations message and absence of violation list items. |
-| `app/customer/proposal/page.tsx` | `/customer/proposal` proposed-trades empty state | To update | The no-trades message and absence of the trades table. |
-| `app/customer/proposal/page.tsx` | `/customer/proposal` deferred-adjustments empty state | To update | The no-deferred-adjustments message and absence of the deferred table. |
+| `app/customer/page.tsx` | `/customer` loaded view | Updated | Customer and portfolio fixture loading, portfolio positions, allocation comparison, suitability report, and navigation to the customer proposal. |
+| `app/customer/page.tsx` | `/customer` loading view | Updated | Busy state, status announcement, and asynchronous customer/portfolio loading behavior. |
+| `app/customer/page.tsx` | `/customer` customer request/data error views | Updated | Error source and kind, diagnostic message, and alert semantics. |
+| `app/customer/page.tsx` | `/customer` portfolio request/data error views | Updated | Error source and kind, diagnostic message, and alert semantics. |
+| `app/customer/page.tsx` | `/customer` suitability empty state | Updated | The no-violations message and absence of violation list items. |
+| `app/customer/proposal/page.tsx` | `/customer/proposal` proposed-trades empty state | Updated | The no-trades message and absence of the trades table. |
+| `app/customer/proposal/page.tsx` | `/customer/proposal` deferred-adjustments empty state | Updated | The no-deferred-adjustments message and absence of the deferred table. |
 
 ## Detail and not-found routes
 
@@ -61,4 +61,3 @@ states listed above, and the shared root layout must be verified at 375px,
 768px, and 1440px. Each `To update` entry will be changed to `Updated` after
 its behavior and responsive coverage are verified; absent and intentionally
 unaffected entries retain their stated final reasons.
-

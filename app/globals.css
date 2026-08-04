@@ -110,6 +110,19 @@ main {
   width: 100%;
 }
 
+.feedback-card {
+  background: var(--color-surface);
+  border: var(--border-subtle);
+  border-radius: var(--radius-lg);
+  max-width: 100%;
+  padding: clamp(var(--space-4), 4vw, var(--space-8));
+}
+
+.empty-state {
+  color: var(--color-foreground-muted);
+  margin: 0;
+}
+
 :root {
   --text-colour: var(--color-foreground);
   --muted-text-colour: var(--color-foreground-muted);

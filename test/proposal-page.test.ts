@@ -198,6 +198,12 @@ describe("ProposalPage", () => {
 
     expect(container.textContent).toContain("No trades are proposed.")
     expect(container.textContent).toContain("No adjustments are deferred.")
+    expect(
+      Array.from(
+        container.querySelectorAll(".empty-state.feedback-card"),
+        (emptyState) => emptyState.textContent
+      )
+    ).toEqual(["No trades are proposed.", "No adjustments are deferred."])
     expect(container.textContent).toContain("Total turnover€0.00")
   })
 
