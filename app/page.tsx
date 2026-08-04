@@ -1,6 +1,6 @@
 import { ActionLink } from "../src/components/ui/ActionLink"
 import { Card } from "../src/components/ui/Card"
-import { PageContainer } from "../src/components/ui/PageContainer"
+import { PageContainer } from "../src/components/PageContainer"
 import { PageHeader } from "../src/components/ui/PageHeader"
 import styles from "./page.module.css"
 
@@ -27,7 +27,7 @@ const workflow = [
 
 export default function Home() {
   return (
-    <PageContainer as="main" className={styles.landing}>
+    <PageContainer as="main" className={styles.landing} width="default">
       <section aria-labelledby="landing-title" className={styles.hero}>
         <PageHeader
           actions={
