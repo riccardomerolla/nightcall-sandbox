@@ -1,6 +1,8 @@
 import type { Metadata } from "next"
 import type { ReactNode } from "react"
 
+import { AppFooter } from "../src/components/AppFooter"
+import { AppHeader } from "../src/components/AppHeader"
 import "./globals.css"
 import "../src/app/globals.css"
 
@@ -13,7 +15,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="app-shell">
+        <AppHeader />
+        {children}
+        <AppFooter />
+      </body>
     </html>
   )
 }

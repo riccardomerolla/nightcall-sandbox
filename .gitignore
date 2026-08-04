@@ -4,3 +4,5 @@ node_modules/
 .llm4ts/
 out/
 .repos/
+playwright-report/
+test-results/
