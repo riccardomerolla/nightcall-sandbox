@@ -1,0 +1,19 @@
+.container {
+  box-sizing: border-box;
+  margin-inline: auto;
+  min-width: 0;
+  padding: clamp(2rem, 6vw, 5rem) clamp(1rem, 4vw, 3rem);
+  width: 100%;
+}
+
+.narrow {
+  max-width: 42rem;
+}
+
+.default {
+  max-width: 56rem;
+}
+
+.wide {
+  max-width: 76rem;
+}

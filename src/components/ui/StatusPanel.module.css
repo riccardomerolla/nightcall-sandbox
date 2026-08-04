@@ -1,0 +1,30 @@
+.page {
+  align-items: center;
+  display: grid;
+  min-height: 100vh;
+  min-height: 100svh;
+}
+
+.panel {
+  border-top: 0.25rem solid var(--color-accent);
+}
+
+.eyebrow {
+  color: var(--color-accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  margin: 0 0 0.625rem;
+  text-transform: uppercase;
+}
+
+.title {
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  letter-spacing: -0.035em;
+  margin: 0;
+}
+
+.message {
+  color: var(--color-foreground-muted);
+  margin: 0.75rem 0 0;
+}
