@@ -85,6 +85,9 @@ body {
   line-height: var(--line-height-body);
   margin: 0;
   min-height: 100vh;
+  color: var(--text-colour);
+  background: #ffffff;
+  font-family: system-ui, sans-serif;
 }
 
 main {
@@ -95,6 +98,11 @@ main {
 }
 
 :root {
+  --text-colour: #1f2937;
+  --muted-text-colour: #374151;
+  --link-colour: #075985;
+  --link-hover-colour: #9a3412;
+  --focus-ring-colour: #b45309;
   --portfolio-allocation-colour-1: #1464a5;
   --portfolio-allocation-colour-2: #a94300;
   --portfolio-allocation-colour-3: #257a37;
@@ -103,6 +111,52 @@ main {
   --portfolio-allocation-colour-6: #087683;
   --portfolio-allocation-colour-7: #715400;
   --portfolio-allocation-separator: #ffffff;
+}
+
+a {
+  color: var(--link-colour);
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.2em;
+  transition:
+    color 150ms ease,
+    text-decoration-thickness 150ms ease;
+}
+
+a:hover {
+  color: var(--link-hover-colour);
+  text-decoration-thickness: 0.2em;
+}
+
+button {
+  font: inherit;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+button:not(:disabled):hover {
+  color: var(--text-colour);
+  border-color: var(--link-colour);
+  background-color: #dbeafe;
+}
+
+:where(
+    a,
+    button,
+    input,
+    select,
+    textarea,
+    summary,
+    [tabindex]:not([tabindex="-1"])
+  ):focus-visible {
+  outline: 3px solid var(--focus-ring-colour);
+  outline-offset: 3px;
+  border-radius: 0.125rem;
 }
 
 .page-shell {
@@ -140,7 +194,7 @@ main {
 
 .portfolio-allocation-chart__summary {
   max-width: 65ch;
-  color: #374151;
+  color: var(--muted-text-colour);
 }
 
 .portfolio-allocation-chart__graphic {
@@ -174,7 +228,7 @@ main {
   align-items: start;
   gap: 0.375rem;
   min-width: 0;
-  color: #1f2937;
+  color: var(--text-colour);
 }
 
 .portfolio-allocation-chart__label {
@@ -200,7 +254,7 @@ main {
   padding: 1rem;
   border: 1px solid #9ca3af;
   border-radius: 0.375rem;
-  color: #374151;
+  color: var(--muted-text-colour);
   background: #f9fafb;
 }
 
@@ -238,4 +292,16 @@ kbd,
 pre,
 samp {
   font-family: var(--font-family-mono);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
 }
