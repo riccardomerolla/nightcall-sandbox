@@ -1,0 +1,69 @@
+:root {
+  color-scheme: light dark;
+  --portfolio-allocation-colour-1: #1464a5;
+  --portfolio-allocation-colour-2: #c45100;
+  --portfolio-allocation-colour-3: #25833a;
+  --portfolio-allocation-colour-4: #7c4aa5;
+  --portfolio-allocation-colour-5: #b52637;
+  --portfolio-allocation-colour-6: #087f8c;
+  --portfolio-allocation-colour-7: #7a5b00;
+  --portfolio-allocation-separator: #ffffff;
+}
+
+.portfolio-allocation-chart {
+  margin: 2rem 0;
+}
+
+.portfolio-allocation-chart__summary {
+  max-width: 65ch;
+}
+
+.portfolio-allocation-chart__graphic {
+  display: block;
+  width: 100%;
+  height: 2rem;
+  overflow: hidden;
+  border-radius: 0.35rem;
+}
+
+.portfolio-allocation-chart__graphic rect {
+  fill: var(--portfolio-allocation-colour);
+  stroke: var(--portfolio-allocation-separator);
+  stroke-width: 0.25;
+}
+
+.portfolio-allocation-chart__legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.65rem 1.25rem;
+  padding: 0;
+  list-style: none;
+}
+
+.portfolio-allocation-chart__legend li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.portfolio-allocation-chart__swatch {
+  flex: 0 0 auto;
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 1px solid currentColor;
+  border-radius: 0.15rem;
+  background: var(--portfolio-allocation-colour);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --portfolio-allocation-colour-1: #64b5f6;
+    --portfolio-allocation-colour-2: #ffad66;
+    --portfolio-allocation-colour-3: #75cf83;
+    --portfolio-allocation-colour-4: #c69bea;
+    --portfolio-allocation-colour-5: #ff7888;
+    --portfolio-allocation-colour-6: #56c9d3;
+    --portfolio-allocation-colour-7: #dec457;
+    --portfolio-allocation-separator: #1d1d1d;
+  }
+}
