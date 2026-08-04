@@ -1,12 +1,14 @@
 import { Schema } from "effect"
 
-export const AssetClass = Schema.Literals([
+export const ASSET_CLASSES = [
   "equity",
   "government_bond",
   "corporate_bond",
   "commodity",
   "cash"
-])
+] as const
+
+export const AssetClass = Schema.Literals(ASSET_CLASSES)
 
 export type AssetClass = typeof AssetClass.Type
 

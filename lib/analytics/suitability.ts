@@ -1,11 +1,17 @@
 import type { MiFIDProfile } from "../domain/mifid"
 import { MODEL_TARGET_ALLOCATION_PERCENTAGES } from "../domain/models"
-import type {
-  AssetClass,
-  Portfolio,
-  PortfolioPosition
+import {
+  ASSET_CLASSES,
+  type AssetClass,
+  type Portfolio,
+  type PortfolioPosition
 } from "../domain/portfolio"
 import { allocationByAssetClass, positionsWithWeights } from "./allocation"
+import {
+  exceedsMaximumBeyondTolerance,
+  fallsBelowMinimumBeyondTolerance,
+  zeroIfWithinDeviationTolerance
+} from "./percentage-comparison"
 
 export interface AllocationDeviation {
   readonly assetClass: AssetClass
@@ -32,37 +38,6 @@ export interface SuitabilityReport {
   readonly deviations: ReadonlyArray<AllocationDeviation>
   readonly violations: ReadonlyArray<SuitabilityViolation>
 }
-
-const modelAssetClasses = [
-  "equity",
-  "government_bond",
-  "corporate_bond",
-  "commodity",
-  "cash"
-] as const satisfies ReadonlyArray<AssetClass>
-
-// Percentage division can leave tiny residuals around mathematically equal
-// values. This tolerance is far below any meaningful reporting precision and is
-// used only when comparing percentages; reported actual allocations retain their
-// full precision.
-const PERCENTAGE_COMPARISON_TOLERANCE_PCT = 1e-10
-
-const zeroIfWithinDeviationTolerance = (deviationPct: number): number =>
-  Math.abs(deviationPct) <= PERCENTAGE_COMPARISON_TOLERANCE_PCT
-    ? 0
-    : deviationPct
-
-const exceedsMaximumBeyondTolerance = (
-  actualPct: number,
-  maximumPct: number
-): boolean =>
-  actualPct - maximumPct > PERCENTAGE_COMPARISON_TOLERANCE_PCT
-
-const fallsBelowMinimumBeyondTolerance = (
-  actualPct: number,
-  minimumPct: number
-): boolean =>
-  minimumPct - actualPct > PERCENTAGE_COMPARISON_TOLERANCE_PCT
 
 export const detectSuitabilityViolations = (
   portfolio: Portfolio,
@@ -110,7 +85,7 @@ export const suitabilityReport = (
     MODEL_TARGET_ALLOCATION_PERCENTAGES[mifidProfile.riskProfile]
 
   return {
-    deviations: modelAssetClasses.map((assetClass) => {
+    deviations: ASSET_CLASSES.map((assetClass) => {
       const actualPct = actualAllocation[assetClass]
       const targetPct = targetAllocation[assetClass]
 
