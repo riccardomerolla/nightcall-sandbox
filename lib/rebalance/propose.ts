@@ -14,9 +14,9 @@ import type {
   Portfolio,
   RebalancingProfile,
   RebalancingProposal,
-  Trade,
-  Violation
+  Trade
 } from "./types"
+import { detectSuitabilityViolations } from "./suitability"
 
 const INVESTABLE_ASSET_CLASSES = ASSET_CLASSES.filter(
   (assetClass) => assetClass !== "cash"
@@ -125,49 +125,6 @@ const percentageOfPortfolio = (
   valueEUR: number
 ): number =>
   state.totalValueEUR === 0 ? 0 : (valueEUR / state.totalValueEUR) * 100
-
-const detectViolations = (
-  state: PlanningState,
-  profile: RebalancingProfile,
-  beforeAllocation: AssetClassAllocationPercentages
-): ReadonlyArray<Violation> => {
-  const positionViolations = state.positions.flatMap(
-    ({ position, originalValueEUR }) => {
-      const actualPct = percentageOfPortfolio(state, originalValueEUR)
-
-      return exceedsMaximumBeyondTolerance(
-        actualPct,
-        profile.maxSinglePositionPct
-      )
-        ? [
-            {
-              constraint: "maxSinglePositionPct" as const,
-              position,
-              actualPct,
-              limitPct: profile.maxSinglePositionPct
-            }
-          ]
-        : []
-    }
-  )
-
-  const cashViolation: ReadonlyArray<Violation> =
-    fallsBelowMinimumBeyondTolerance(
-      beforeAllocation.cash,
-      profile.minCashPct
-    )
-      ? [
-          {
-            constraint: "minCashPct",
-            assetClass: "cash",
-            actualPct: beforeAllocation.cash,
-            limitPct: profile.minCashPct
-          }
-        ]
-      : []
-
-  return [...positionViolations, ...cashViolation]
-}
 
 const candidatesForAssetClass = (
   state: PlanningState,
@@ -567,7 +524,7 @@ export const proposeRebalancing = (
 ): RebalancingProposal => {
   const state = createPlanningState(portfolio, profile)
   const beforeAllocation = allocationFromState(state)
-  const violations = detectViolations(state, profile, beforeAllocation)
+  const violations = detectSuitabilityViolations(portfolio, profile)
 
   if (state.totalValueEUR === 0) {
     return {

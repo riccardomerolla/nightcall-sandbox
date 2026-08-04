@@ -10,10 +10,13 @@ export type AssetClassAllocationPercentages = Readonly<
   Record<AssetClass, number>
 >
 
-export interface RebalancingProfile {
-  readonly modelTarget: AssetClassAllocationPercentages
+export interface SuitabilityConstraints {
   readonly minCashPct: number
   readonly maxSinglePositionPct: number
+}
+
+export interface RebalancingProfile extends SuitabilityConstraints {
+  readonly modelTarget: AssetClassAllocationPercentages
 }
 
 export type InstrumentReference = Pick<

@@ -3,15 +3,14 @@ import { MODEL_TARGET_ALLOCATION_PERCENTAGES } from "../domain/models"
 import {
   ASSET_CLASSES,
   type AssetClass,
-  type Portfolio,
-  type PortfolioPosition
+  type Portfolio
 } from "../domain/portfolio"
-import { allocationByAssetClass, positionsWithWeights } from "./allocation"
 import {
-  exceedsMaximumBeyondTolerance,
-  fallsBelowMinimumBeyondTolerance,
-  zeroIfWithinDeviationTolerance
-} from "./percentage-comparison"
+  detectSuitabilityViolations as detectRebalancingSuitabilityViolations
+} from "../rebalance/suitability"
+import type { Violation as SuitabilityViolation } from "../rebalance/types"
+import { allocationByAssetClass } from "./allocation"
+import { zeroIfWithinDeviationTolerance } from "./percentage-comparison"
 
 export interface AllocationDeviation {
   readonly assetClass: AssetClass
@@ -20,19 +19,7 @@ export interface AllocationDeviation {
   readonly deviationPct: number
 }
 
-export type SuitabilityViolation =
-  | {
-    readonly constraint: "maxSinglePositionPct"
-    readonly position: PortfolioPosition
-    readonly actualPct: number
-    readonly limitPct: number
-  }
-  | {
-    readonly constraint: "minCashPct"
-    readonly assetClass: "cash"
-    readonly actualPct: number
-    readonly limitPct: number
-  }
+export type { Violation as SuitabilityViolation } from "../rebalance/types"
 
 export interface SuitabilityReport {
   readonly deviations: ReadonlyArray<AllocationDeviation>
@@ -42,39 +29,8 @@ export interface SuitabilityReport {
 export const detectSuitabilityViolations = (
   portfolio: Portfolio,
   mifidProfile: MiFIDProfile
-): ReadonlyArray<SuitabilityViolation> => {
-  const positionLimitPct = mifidProfile.constraints.maxSinglePositionPct
-  const positionViolations: ReadonlyArray<SuitabilityViolation> =
-    positionsWithWeights(portfolio.positions).flatMap(
-      ({ position, weightPct: actualPct }) =>
-        exceedsMaximumBeyondTolerance(actualPct, positionLimitPct)
-          ? [
-            {
-              constraint: "maxSinglePositionPct",
-              position,
-              actualPct,
-              limitPct: positionLimitPct
-            }
-          ]
-          : []
-    )
-
-  const actualCashPct = allocationByAssetClass(portfolio.positions).cash
-  const minimumCashPct = mifidProfile.constraints.minCashPct
-  const cashViolation: ReadonlyArray<SuitabilityViolation> =
-    fallsBelowMinimumBeyondTolerance(actualCashPct, minimumCashPct)
-      ? [
-        {
-          constraint: "minCashPct",
-          assetClass: "cash",
-          actualPct: actualCashPct,
-          limitPct: minimumCashPct
-        }
-      ]
-      : []
-
-  return [...positionViolations, ...cashViolation]
-}
+): ReadonlyArray<SuitabilityViolation> =>
+  detectRebalancingSuitabilityViolations(portfolio, mifidProfile.constraints)
 
 export const suitabilityReport = (
   portfolio: Portfolio,
