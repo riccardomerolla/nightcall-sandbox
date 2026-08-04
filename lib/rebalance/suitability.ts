@@ -8,13 +8,18 @@ import type {
   SuitabilityConstraints,
   Violation
 } from "./types"
+import {
+  comparePortfolioPositions,
+  compareViolations
+} from "./ordering"
 
 export const detectSuitabilityViolations = (
   portfolio: Portfolio,
   constraints: SuitabilityConstraints
 ): ReadonlyArray<Violation> => {
+  const positions = [...portfolio.positions].sort(comparePortfolioPositions)
   const positionViolations: ReadonlyArray<Violation> = positionsWithWeights(
-    portfolio.positions
+    positions
   ).flatMap(({ position, weightPct: actualPct }) =>
     exceedsMaximumBeyondTolerance(
       actualPct,
@@ -31,7 +36,7 @@ export const detectSuitabilityViolations = (
       : []
   )
 
-  const actualCashPct = allocationByAssetClass(portfolio.positions).cash
+  const actualCashPct = allocationByAssetClass(positions).cash
   const cashViolation: ReadonlyArray<Violation> =
     fallsBelowMinimumBeyondTolerance(actualCashPct, constraints.minCashPct)
       ? [
@@ -44,5 +49,5 @@ export const detectSuitabilityViolations = (
         ]
       : []
 
-  return [...positionViolations, ...cashViolation]
+  return [...positionViolations, ...cashViolation].sort(compareViolations)
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  ASSET_CLASSES,
   Portfolio,
   PortfolioPosition,
   type AssetClass
@@ -384,5 +385,99 @@ describe("proposeRebalancing", () => {
     expect(proposal.beforeAllocation.equity).toBeGreaterThan(28)
     expect(proposal.beforeAllocation.cash).toBeLessThan(10)
     expect(proposal.violations).toEqual([])
+  })
+
+  it("returns canonically ordered proposals across repeated calls with tied positions", () => {
+    const tiedPortfolio = portfolio([
+      position("Z-CASH", "cash", 1_000),
+      position("A-CASH", "cash", 1_000),
+      position("Z-GOV", "government_bond", 1_000),
+      position("A-GOV", "government_bond", 1_000),
+      position("Z-EQ", "equity", 3_000),
+      position("A-EQ", "equity", 3_000)
+    ])
+    const tiedProfile = profile(
+      {
+        equity: 45,
+        government_bond: 25,
+        corporate_bond: 5,
+        commodity: 5,
+        cash: 20
+      },
+      { maxSinglePositionPct: 25, minCashPct: 25 }
+    )
+    const proposals = Array.from({ length: 10 }, () =>
+      proposeRebalancing(tiedPortfolio, tiedProfile)
+    )
+
+    expect(proposals).toEqual(
+      Array.from({ length: 10 }, () => proposals[0])
+    )
+    expect(Object.keys(proposals[0]?.beforeAllocation ?? {})).toEqual(
+      ASSET_CLASSES
+    )
+    expect(Object.keys(proposals[0]?.afterAllocation ?? {})).toEqual(
+      ASSET_CLASSES
+    )
+    expect(proposals[0]?.beforeAllocation).toEqual({
+      equity: 60,
+      government_bond: 20,
+      corporate_bond: 0,
+      commodity: 0,
+      cash: 20
+    })
+    expect(proposals[0]?.afterAllocation).toEqual({
+      equity: 45,
+      government_bond: 25,
+      corporate_bond: 0,
+      commodity: 0,
+      cash: 30
+    })
+    expect(
+      proposals[0]?.trades.map((trade) => [
+        trade.action,
+        trade.instrument.isin,
+        trade.amountEUR,
+        trade.rationale
+      ])
+    ).toEqual([
+      ["sell", "A-EQ", 1_000, "Reduce equity toward its target allocation."],
+      ["sell", "Z-EQ", 500, "Reduce equity toward its target allocation."],
+      [
+        "buy",
+        "A-GOV",
+        500,
+        "Increase government bond toward its target allocation."
+      ],
+      [
+        "buy",
+        "A-CASH",
+        500,
+        "Increase cash to satisfy the minimum cash allocation."
+      ]
+    ])
+    expect(proposals[0]?.deferred).toEqual([
+      {
+        assetClass: "corporate_bond",
+        amountEUR: 500,
+        reason: "No existing position is available for this asset class."
+      },
+      {
+        assetClass: "commodity",
+        amountEUR: 500,
+        reason: "No existing position is available for this asset class."
+      }
+    ])
+    expect(
+      proposals[0]?.violations.map((violation) =>
+        violation.constraint === "maxSinglePositionPct"
+          ? [violation.constraint, violation.position.isin]
+          : [violation.constraint, violation.assetClass]
+      )
+    ).toEqual([
+      ["maxSinglePositionPct", "A-EQ"],
+      ["maxSinglePositionPct", "Z-EQ"],
+      ["minCashPct", "cash"]
+    ])
   })
 })

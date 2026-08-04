@@ -14,6 +14,11 @@ import type {
   Violation
 } from "./types"
 import { detectSuitabilityViolations } from "./suitability"
+import {
+  compareDeferredAdjustments,
+  comparePortfolioPositions,
+  compareTrades
+} from "./ordering"
 
 const INVESTABLE_ASSET_CLASSES = ASSET_CLASSES.filter(
   (assetClass) => assetClass !== "cash"
@@ -72,11 +77,13 @@ const createPlanningState = (
   portfolio: Portfolio,
   profile: RebalancingProfile
 ): PlanningState => {
-  const positions = portfolio.positions.map((position) => {
-    const originalValueEUR = position.quantity * position.priceEur
+  const positions = [...portfolio.positions]
+    .sort(comparePortfolioPositions)
+    .map((position) => {
+      const originalValueEUR = position.quantity * position.priceEur
 
-    return { position, originalValueEUR, proposedValueEUR: originalValueEUR }
-  })
+      return { position, originalValueEUR, proposedValueEUR: originalValueEUR }
+    })
   const totalValueEUR = positions.reduce(
     (total, position) => total + position.originalValueEUR,
     0
@@ -150,7 +157,8 @@ const rankSellCandidates = (
   [...candidates].sort(
     (left, right) =>
       right.proposedValueEUR - plannedSaleAmount(right, plannedSales) -
-      (left.proposedValueEUR - plannedSaleAmount(left, plannedSales))
+        (left.proposedValueEUR - plannedSaleAmount(left, plannedSales)) ||
+      comparePortfolioPositions(left.position, right.position)
   )
 
 // Buying the smallest holdings first spreads an allocation across instruments.
@@ -158,7 +166,9 @@ const rankBuyCandidates = (
   candidates: ReadonlyArray<PositionPlanningState>
 ): ReadonlyArray<PositionPlanningState> =>
   [...candidates].sort(
-    (left, right) => left.proposedValueEUR - right.proposedValueEUR
+    (left, right) =>
+      left.proposedValueEUR - right.proposedValueEUR ||
+      comparePortfolioPositions(left.position, right.position)
   )
 
 const cashPositions = (
@@ -644,8 +654,8 @@ export const proposeRebalancing = (
   return {
     beforeAllocation,
     afterAllocation: allocationFromState(state),
-    trades: state.trades,
-    deferred: state.deferred,
+    trades: [...state.trades].sort(compareTrades),
+    deferred: [...state.deferred].sort(compareDeferredAdjustments),
     violations
   }
 }
