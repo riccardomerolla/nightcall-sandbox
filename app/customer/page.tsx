@@ -15,6 +15,7 @@ import { formatEUR } from "../../lib/format/currency"
 import { formatPercent } from "../../lib/format/percent"
 import { importMiFIDJson } from "../../lib/importers/mifid-json"
 import { importPortfolioCsv } from "../../lib/importers/portfolio-csv"
+import styles from "./customer.module.css"
 
 const customerFixtureUrl = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/fixtures/mifid-mario-rossi.json`
 const portfolioFixtureUrl = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/fixtures/portfolio-mario-rossi.csv`
@@ -57,6 +58,18 @@ const formatUnderscoreDelimitedIdentifier = (identifier: string) =>
 
 const formatInvestmentHorizon = (years: number) =>
   `${years} ${years === 1 ? "year" : "years"}`
+
+const describeDeviation = (deviationPct: number) => {
+  if (deviationPct > 0) {
+    return `Above target +${formatPercent(deviationPct)}`
+  }
+
+  if (deviationPct < 0) {
+    return `Below target ${formatPercent(deviationPct)}`
+  }
+
+  return `On target ${formatPercent(deviationPct)}`
+}
 
 const describeSuitabilityViolation = (violation: SuitabilityViolation): string => {
   switch (violation.constraint) {
@@ -168,10 +181,14 @@ export default function CustomerPage() {
     return (
       <main
         aria-busy="true"
-        style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}
+        className={`${styles.dashboard} ${styles.statePage}`}
       >
-        <h1>Customer dashboard</h1>
-        <p role="status">Loading customer data…</p>
+        <div className={styles.statePanel}>
+          <h1 className={styles.stateTitle}>Customer dashboard</h1>
+          <p className={styles.stateMessage} role="status">
+            Loading customer data…
+          </p>
+        </div>
       </main>
     )
   }
@@ -184,41 +201,82 @@ export default function CustomerPage() {
         : `The ${sourceLabel} data is invalid: ${state.message}`
 
     return (
-      <main style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}>
-        <h1>Unable to load {sourceLabel}</h1>
-        <p role="alert">{errorDescription}</p>
+      <main className={`${styles.dashboard} ${styles.statePage}`}>
+        <div className={styles.statePanel}>
+          <h1 className={styles.stateTitle}>Unable to load {sourceLabel}</h1>
+          <p className={styles.stateMessage} role="alert">
+            {errorDescription}
+          </p>
+        </div>
       </main>
     )
   }
 
   const weightedPositions = positionsWithWeights(state.portfolio.positions)
+  const portfolioValue = state.portfolio.positions.reduce(
+    (total, position) => total + position.quantity * position.priceEur,
+    0
+  )
   const suitability = suitabilityReport(
     state.portfolio,
     state.customer
   )
 
   return (
-    <main style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}>
-      <header aria-labelledby="customer-name">
-        <p>Customer profile</p>
-        <h1 id="customer-name">{state.customer.fullName}</h1>
-        <p>Customer data loaded for {state.customer.customerId}.</p>
-        <dl>
-          <dt>Risk profile</dt>
-          <dd>{formatUnderscoreDelimitedIdentifier(state.customer.riskProfile)}</dd>
-          <dt>Investment horizon</dt>
-          <dd>{formatInvestmentHorizon(state.customer.investmentHorizonYears)}</dd>
-          <dt>Objectives</dt>
-          <dd>
-            {state.customer.objectives
-              .map(formatUnderscoreDelimitedIdentifier)
-              .join(", ")}
-          </dd>
+    <main className={styles.dashboard}>
+      <header
+        aria-labelledby="customer-name"
+        className={styles.portfolioHeader}
+      >
+        <div className={styles.headerTopline}>
+          <div>
+            <p className={styles.eyebrow}>Customer portfolio</p>
+            <h1 className={styles.customerName} id="customer-name">
+              {state.customer.fullName}
+            </h1>
+            <p className={styles.customerReference}>
+              Customer data loaded for {state.customer.customerId}.
+            </p>
+          </div>
+          <Link className={styles.headerAction} href="/customer/proposal">
+            View rebalancing proposal
+          </Link>
+        </div>
+        <dl className={styles.portfolioSummary}>
+          <div className={styles.primaryMetric}>
+            <dt>Portfolio value</dt>
+            <dd>{formatEUR(portfolioValue)}</dd>
+          </div>
+          <div className={styles.supportingMetric}>
+            <dt>Risk profile</dt>
+            <dd>
+              {formatUnderscoreDelimitedIdentifier(state.customer.riskProfile)}
+            </dd>
+          </div>
+          <div className={styles.supportingMetric}>
+            <dt>Investment horizon</dt>
+            <dd>
+              {formatInvestmentHorizon(
+                state.customer.investmentHorizonYears
+              )}
+            </dd>
+          </div>
+          <div className={styles.supportingMetric}>
+            <dt>Objectives</dt>
+            <dd>
+              {state.customer.objectives
+                .map(formatUnderscoreDelimitedIdentifier)
+                .join(", ")}
+            </dd>
+          </div>
         </dl>
       </header>
-      <section aria-labelledby="positions-heading">
+      <section
+        aria-labelledby="positions-heading"
+        className={styles.dataSection}
+      >
         <h2 id="positions-heading">Positions</h2>
-        <table>
+        <table className={styles.responsiveTable}>
           <thead>
             <tr>
               <th scope="col">Instrument</th>
@@ -229,17 +287,26 @@ export default function CustomerPage() {
           <tbody>
             {weightedPositions.map(({ position, weightPct }) => (
               <tr key={position.isin}>
-                <th scope="row">{position.name}</th>
-                <td>{formatEUR(position.quantity * position.priceEur)}</td>
-                <td>{formatPercent(weightPct)}</td>
+                <th data-label="Instrument" scope="row">
+                  {position.name}
+                </th>
+                <td data-label="Market value">
+                  {formatEUR(position.quantity * position.priceEur)}
+                </td>
+                <td data-label="Portfolio weight">
+                  {formatPercent(weightPct)}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </section>
-      <section aria-labelledby="allocation-heading">
+      <section
+        aria-labelledby="allocation-heading"
+        className={styles.dataSection}
+      >
         <h2 id="allocation-heading">Allocation comparison</h2>
-        <table>
+        <table className={styles.responsiveTable}>
           <thead>
             <tr>
               <th scope="col">Asset class</th>
@@ -252,22 +319,29 @@ export default function CustomerPage() {
             {suitability.deviations.map(
               ({ assetClass, actualPct, targetPct, deviationPct }) => (
                 <tr key={assetClass}>
-                  <th scope="row">
+                  <th data-label="Asset class" scope="row">
                     {formatUnderscoreDelimitedIdentifier(assetClass)}
                   </th>
-                  <td>{formatPercent(actualPct)}</td>
-                  <td>{formatPercent(targetPct)}</td>
-                  <td>{formatPercent(deviationPct)}</td>
+                  <td data-label="Current">{formatPercent(actualPct)}</td>
+                  <td data-label="Target">{formatPercent(targetPct)}</td>
+                  <td data-label="Deviation">
+                    {describeDeviation(deviationPct)}
+                  </td>
                 </tr>
               )
             )}
           </tbody>
         </table>
       </section>
-      <section aria-labelledby="suitability-heading">
+      <section
+        aria-labelledby="suitability-heading"
+        className={styles.dataSection}
+      >
         <h2 id="suitability-heading">Suitability violations</h2>
         {suitability.violations.length === 0 ? (
-          <p>No suitability violations detected.</p>
+          <p className={styles.emptyState}>
+            No suitability violations detected.
+          </p>
         ) : (
           <ul>
             {suitability.violations.map((violation) => (
@@ -283,9 +357,6 @@ export default function CustomerPage() {
             ))}
           </ul>
         )}
-        <p>
-          <Link href="/customer/proposal">View rebalancing proposal</Link>
-        </p>
       </section>
     </main>
   )
