@@ -15,6 +15,7 @@ import { formatEUR } from "../../lib/format/currency"
 import { formatPercent } from "../../lib/format/percent"
 import { importMiFIDJson } from "../../lib/importers/mifid-json"
 import { importPortfolioCsv } from "../../lib/importers/portfolio-csv"
+import styles from "./customer.module.css"
 
 const customerFixtureUrl = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/fixtures/mifid-mario-rossi.json`
 const portfolioFixtureUrl = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/fixtures/portfolio-mario-rossi.csv`
@@ -192,6 +193,10 @@ export default function CustomerPage() {
   }
 
   const weightedPositions = positionsWithWeights(state.portfolio.positions)
+  const portfolioValue = state.portfolio.positions.reduce(
+    (total, position) => total + position.quantity * position.priceEur,
+    0
+  )
   const suitability = suitabilityReport(
     state.portfolio,
     state.customer
@@ -199,21 +204,51 @@ export default function CustomerPage() {
 
   return (
     <main style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}>
-      <header aria-labelledby="customer-name">
-        <p>Customer profile</p>
-        <h1 id="customer-name">{state.customer.fullName}</h1>
-        <p>Customer data loaded for {state.customer.customerId}.</p>
-        <dl>
-          <dt>Risk profile</dt>
-          <dd>{formatUnderscoreDelimitedIdentifier(state.customer.riskProfile)}</dd>
-          <dt>Investment horizon</dt>
-          <dd>{formatInvestmentHorizon(state.customer.investmentHorizonYears)}</dd>
-          <dt>Objectives</dt>
-          <dd>
-            {state.customer.objectives
-              .map(formatUnderscoreDelimitedIdentifier)
-              .join(", ")}
-          </dd>
+      <header
+        aria-labelledby="customer-name"
+        className={styles.portfolioHeader}
+      >
+        <div className={styles.headerTopline}>
+          <div>
+            <p className={styles.eyebrow}>Customer portfolio</p>
+            <h1 className={styles.customerName} id="customer-name">
+              {state.customer.fullName}
+            </h1>
+            <p className={styles.customerReference}>
+              Customer data loaded for {state.customer.customerId}.
+            </p>
+          </div>
+          <Link className={styles.headerAction} href="/customer/proposal">
+            View rebalancing proposal
+          </Link>
+        </div>
+        <dl className={styles.portfolioSummary}>
+          <div className={styles.primaryMetric}>
+            <dt>Portfolio value</dt>
+            <dd>{formatEUR(portfolioValue)}</dd>
+          </div>
+          <div className={styles.supportingMetric}>
+            <dt>Risk profile</dt>
+            <dd>
+              {formatUnderscoreDelimitedIdentifier(state.customer.riskProfile)}
+            </dd>
+          </div>
+          <div className={styles.supportingMetric}>
+            <dt>Investment horizon</dt>
+            <dd>
+              {formatInvestmentHorizon(
+                state.customer.investmentHorizonYears
+              )}
+            </dd>
+          </div>
+          <div className={styles.supportingMetric}>
+            <dt>Objectives</dt>
+            <dd>
+              {state.customer.objectives
+                .map(formatUnderscoreDelimitedIdentifier)
+                .join(", ")}
+            </dd>
+          </div>
         </dl>
       </header>
       <section aria-labelledby="positions-heading">
@@ -283,9 +318,6 @@ export default function CustomerPage() {
             ))}
           </ul>
         )}
-        <p>
-          <Link href="/customer/proposal">View rebalancing proposal</Link>
-        </p>
       </section>
     </main>
   )

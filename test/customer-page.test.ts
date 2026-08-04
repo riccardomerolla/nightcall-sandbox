@@ -110,7 +110,7 @@ describe("CustomerPage", () => {
 
     const definitionFor = (term: string) => {
       const definitionTerm = Array.from(
-        profileDetails?.querySelectorAll(":scope > dt") ?? []
+        profileDetails?.querySelectorAll("dt") ?? []
       ).find((element) => element.textContent === term)
 
       expect(definitionTerm).toBeInstanceOf(HTMLElement)
@@ -120,6 +120,7 @@ describe("CustomerPage", () => {
       return definitionTerm?.nextElementSibling?.textContent
     }
 
+    expect(definitionFor("Portfolio value")).toBe("€89,398.60")
     expect(definitionFor("Risk profile")).toBe("Balanced")
     expect(definitionFor("Investment horizon")).toBe("8 years")
     expect(definitionFor("Objectives")).toBe("Capital growth, Retirement")
@@ -196,10 +197,10 @@ describe("CustomerPage", () => {
     ).toEqual([
       "iShares Core Euro Government Bond UCITS ETF is 39.7% of the portfolio, above the 25.0% maximum."
     ])
-    expect(suitability?.querySelector("a")?.textContent).toBe(
+    expect(profileHeader.querySelector("a")?.textContent).toBe(
       "View rebalancing proposal"
     )
-    expect(suitability?.querySelector("a")?.getAttribute("href")).toBe(
+    expect(profileHeader.querySelector("a")?.getAttribute("href")).toBe(
       "/customer/proposal"
     )
   })
@@ -233,7 +234,7 @@ describe("CustomerPage", () => {
       "No suitability violations detected."
     )
     expect(suitability?.querySelector("li")).toBeNull()
-    expect(suitability?.querySelector("a")?.getAttribute("href")).toBe(
+    expect(container.querySelector("header a")?.getAttribute("href")).toBe(
       "/customer/proposal"
     )
   })
