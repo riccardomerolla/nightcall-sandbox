@@ -1,0 +1,81 @@
+.card {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: var(--space-6);
+  border: var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-foreground);
+  overflow-wrap: anywhere;
+}
+
+.card:where(a[href], button, [role="button"], [role="link"]) {
+  appearance: none;
+  font: inherit;
+  line-height: inherit;
+  text-align: inherit;
+  text-decoration: none;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+.card:where(
+    a[href]:not([aria-disabled="true"]),
+    button:not(:disabled),
+    [role="button"]:not([aria-disabled="true"]),
+    [role="link"]:not([aria-disabled="true"])
+  ) {
+  cursor: pointer;
+}
+
+.card:where(
+    a[href]:not([aria-disabled="true"]),
+    button:not(:disabled),
+    [role="button"]:not([aria-disabled="true"]),
+    [role="link"]:not([aria-disabled="true"])
+  ):hover {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  color: var(--color-foreground);
+  transform: translateY(calc(-1 * var(--border-width)));
+}
+
+.card:where(
+    a[href]:not([aria-disabled="true"]),
+    button:not(:disabled),
+    [role="button"]:not([aria-disabled="true"]),
+    [role="link"]:not([aria-disabled="true"])
+  ):focus-visible {
+  border-color: var(--color-accent);
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+  box-shadow: var(--shadow-md);
+}
+
+.card:where(
+    a[href]:not([aria-disabled="true"]),
+    button:not(:disabled),
+    [role="button"]:not([aria-disabled="true"]),
+    [role="link"]:not([aria-disabled="true"])
+  ):active {
+  border-color: var(--color-accent-active);
+  background: var(--color-surface-subtle);
+  box-shadow: none;
+  transform: translateY(var(--border-width));
+}
+
+.card:where(button:disabled, [aria-disabled="true"]) {
+  border-color: var(--color-border);
+  background: var(--color-surface-subtle);
+  box-shadow: none;
+  color: var(--color-foreground-muted);
+  cursor: not-allowed;
+  transform: none;
+}
