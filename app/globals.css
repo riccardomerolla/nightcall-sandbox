@@ -73,6 +73,7 @@ html {
   font-family: var(--font-family-sans);
   font-size: var(--font-size-base);
   min-width: var(--page-min-width);
+  overflow-wrap: break-word;
   text-size-adjust: 100%;
 }
 
@@ -84,12 +85,180 @@ body {
   line-height: var(--line-height-body);
   margin: 0;
   min-height: 100vh;
+  color: var(--text-colour);
+  background: #ffffff;
+  font-family: system-ui, sans-serif;
 }
 
 main {
   margin-inline: auto;
   max-width: var(--page-max-width);
   padding: var(--page-padding-block) var(--page-padding-inline);
+  width: 100%;
+}
+
+:root {
+  --text-colour: #1f2937;
+  --muted-text-colour: #374151;
+  --link-colour: #075985;
+  --link-hover-colour: #9a3412;
+  --focus-ring-colour: #b45309;
+  --portfolio-allocation-colour-1: #1464a5;
+  --portfolio-allocation-colour-2: #a94300;
+  --portfolio-allocation-colour-3: #257a37;
+  --portfolio-allocation-colour-4: #704197;
+  --portfolio-allocation-colour-5: #ac2636;
+  --portfolio-allocation-colour-6: #087683;
+  --portfolio-allocation-colour-7: #715400;
+  --portfolio-allocation-separator: #ffffff;
+}
+
+a {
+  color: var(--link-colour);
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.2em;
+  transition:
+    color 150ms ease,
+    text-decoration-thickness 150ms ease;
+}
+
+a:hover {
+  color: var(--link-hover-colour);
+  text-decoration-thickness: 0.2em;
+}
+
+button {
+  font: inherit;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+button:not(:disabled):hover {
+  color: var(--text-colour);
+  border-color: var(--link-colour);
+  background-color: #dbeafe;
+}
+
+:where(
+    a,
+    button,
+    input,
+    select,
+    textarea,
+    summary,
+    [tabindex]:not([tabindex="-1"])
+  ):focus-visible {
+  outline: 3px solid var(--focus-ring-colour);
+  outline-offset: 3px;
+  border-radius: 0.125rem;
+}
+
+.page-shell {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding: clamp(1rem, 4vw, 3rem);
+}
+
+.portfolio-summary dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-block: 2rem;
+}
+
+.portfolio-summary dt {
+  font-weight: 700;
+}
+
+.portfolio-summary dd {
+  min-width: 0;
+  margin: 0.25rem 0 0;
+}
+
+.portfolio-section {
+  margin-block-start: 2.5rem;
+}
+
+.portfolio-allocation-chart {
+  min-width: 0;
+  margin-inline: 0;
+  margin-block-end: 0;
+}
+
+.portfolio-allocation-chart__summary {
+  max-width: 65ch;
+  color: var(--muted-text-colour);
+}
+
+.portfolio-allocation-chart__graphic {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: clamp(1.5rem, 4vw, 2rem);
+  margin-block-start: 1rem;
+  overflow: hidden;
+  border-radius: 0.375rem;
+}
+
+.portfolio-allocation-chart__graphic rect {
+  fill: var(--portfolio-allocation-colour);
+  stroke: var(--portfolio-allocation-separator);
+  stroke-width: 0.25;
+}
+
+.portfolio-allocation-chart__legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: 0.75rem 1.25rem;
+  padding: 0;
+  margin-block: 1rem 0;
+  list-style: none;
+}
+
+.portfolio-allocation-chart__legend li {
+  display: grid;
+  grid-template-columns: 0.875rem minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.375rem;
+  min-width: 0;
+  color: var(--text-colour);
+}
+
+.portfolio-allocation-chart__label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.portfolio-allocation-chart__swatch {
+  width: 0.875rem;
+  height: 0.875rem;
+  margin-block-start: 0.2rem;
+  border: 1px solid #111827;
+  border-radius: 0.15rem;
+  background: var(--portfolio-allocation-colour);
+}
+
+.portfolio-allocation-chart__legend strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.allocation-empty-state {
+  max-width: 65ch;
+  padding: 1rem;
+  border: 1px solid #9ca3af;
+  border-radius: 0.375rem;
+  color: var(--muted-text-colour);
+  background: #f9fafb;
+}
+
+.responsive-table {
   width: 100%;
 }
 
@@ -123,4 +292,16 @@ kbd,
 pre,
 samp {
   font-family: var(--font-family-mono);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
 }
