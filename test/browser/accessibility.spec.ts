@@ -434,4 +434,24 @@ test.describe("WCAG AA accessibility scans", () => {
     ).toBeVisible()
     await expectNoAccessibilityViolations(page)
   })
+
+  test("customer lookup form default state has no accessibility violations", async ({
+    page
+  }) => {
+    await page.goto("/")
+    await expect(page.getByLabel("Customer ID")).toBeVisible()
+    await expectNoAccessibilityViolations(page)
+  })
+
+  test("customer lookup form invalid state has no accessibility violations", async ({
+    page
+  }) => {
+    await page.goto("/")
+    await page
+      .getByRole("button", { name: "View customer dashboard" })
+      .click()
+
+    await expect(page.getByRole("alert")).toBeVisible()
+    await expectNoAccessibilityViolations(page)
+  })
 })

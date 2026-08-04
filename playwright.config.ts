@@ -29,7 +29,7 @@ export default defineConfig({
     {
       name: "chromium-375",
       testMatch:
-        /(accessibility|keyboard-navigation|mobile-navigation|route-groups)\.spec\.ts/,
+        /(accessibility|form-validation|keyboard-navigation|mobile-navigation|route-groups)\.spec\.ts/,
       use: { viewport: { width: 375, height: 812 } }
     },
     {

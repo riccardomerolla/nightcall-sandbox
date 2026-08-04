@@ -14,14 +14,16 @@ module and should also include any future `src/app/**/page.tsx` modules.
 
 | Page module | Route | Route group | Review status | Representative browser/accessibility scenario |
 | --- | --- | --- | --- | --- |
-| `app/page.tsx` | `/` | Root | Covered | `root-shell`: loaded landing page at 375px, 768px, and 1440px; shared-shell keyboard order and WCAG AA scan |
+| `app/page.tsx` | `/` | Root | Covered | `root-shell`: loaded landing page at 375px, 768px, and 1440px; shared-shell keyboard order and WCAG AA scan. `form-validation`: the customer lookup form's empty, malformed, and corrected states at 375px, 768px, and 1440px, with WCAG AA scans of its default and invalid states |
 | `app/customer/page.tsx` | `/customer` | Customer workflow | Covered | `customer-workflow`: deterministic populated, loading, and invalid-data dashboard states at 375px, 768px, and 1440px; navigation, keyboard order, and WCAG AA scans |
 | `app/customer/proposal/page.tsx` | `/customer/proposal` | Customer workflow | Covered | `customer-workflow`: follow the dashboard proposal action, then review the populated proposal state responsively and with a WCAG AA scan |
 | `app/proposal/page.tsx` | `/proposal` | Proposal placeholder | Covered | `proposal-placeholder`: loaded placeholder at 375px, 768px, and 1440px; back-link keyboard focus and WCAG AA scan |
 
 ## Route groups
 
-- **Root** covers the unprefixed landing route.
+- **Root** covers the unprefixed landing route, including its customer
+  lookup form — the only form in the application and the representative
+  scenario for form-validation coverage.
 - **Customer workflow** covers the customer dashboard and the proposal reached
   from its primary action. Its representative scenario exercises the flow
   between both pages rather than duplicating shell assertions.
@@ -31,3 +33,16 @@ module and should also include any future `src/app/**/page.tsx` modules.
 When a page module is added, moved, or removed, update this inventory in the
 same change. Route groups may share one scenario only when that scenario visits
 every page listed in the group.
+
+## Known limitation: no committed pixel-snapshot baselines
+
+The scenarios above assert layout responsiveness with CSS-property and
+bounding-box checks (`toHaveCSS`, `boundingBox()`), not
+`expect(page).toHaveScreenshot()`. Adding real pixel-snapshot coverage
+requires running the Playwright browser suite locally to generate and commit
+`-snapshots/` baseline images (`npm run test:browser -- --update-snapshots`);
+that could not be done from the environment that authored this inventory
+because it had no shell/browser execution access. Until that follow-up run
+happens and baselines are committed, do not add `toHaveScreenshot()` calls —
+without a committed baseline, Playwright silently regenerates and passes on
+every CI run, giving no real regression protection.

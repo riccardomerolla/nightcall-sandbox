@@ -111,3 +111,8 @@
     grid-template-columns: 1fr;
   }
 }
+
+.lookup {
+  display: grid;
+  max-width: 32rem;
+}

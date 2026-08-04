@@ -1,3 +1,4 @@
+import { CustomerLookupForm } from "../src/components/CustomerLookupForm"
 import { ActionLink } from "../src/components/ui/ActionLink"
 import { Card } from "../src/components/ui/Card"
 import { PageContainer } from "../src/components/ui/PageContainer"
@@ -69,6 +70,10 @@ export default function Home() {
             </Card>
           ))}
         </div>
+      </section>
+
+      <section aria-label="Customer lookup" className={styles.lookup}>
+        <CustomerLookupForm />
       </section>
     </PageContainer>
   )
