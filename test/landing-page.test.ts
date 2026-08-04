@@ -2,7 +2,23 @@
 
 import { act, createElement } from "react"
 import { createRoot, type Root } from "react-dom/client"
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
+vi.mock("next/navigation", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("next/navigation")>()
+
+  return {
+    ...actual,
+    useRouter: () => ({
+      back: () => {},
+      forward: () => {},
+      prefetch: () => {},
+      push: () => {},
+      refresh: () => {},
+      replace: () => {}
+    })
+  }
+})
 
 import Home from "../app/page"
 
