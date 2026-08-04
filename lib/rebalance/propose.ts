@@ -1,8 +1,4 @@
 import {
-  exceedsMaximumBeyondTolerance,
-  fallsBelowMinimumBeyondTolerance
-} from "../analytics/percentage-comparison"
-import {
   ASSET_CLASSES,
   type AssetClass,
   type PortfolioPosition
@@ -14,7 +10,8 @@ import type {
   Portfolio,
   RebalancingProfile,
   RebalancingProposal,
-  Trade
+  Trade,
+  Violation
 } from "./types"
 import { detectSuitabilityViolations } from "./suitability"
 
@@ -50,6 +47,11 @@ interface PlannedSale {
 }
 
 type PlannedSales = Map<PositionPlanningState, PlannedSale>
+
+interface CashCredit {
+  readonly candidate: PositionPlanningState
+  readonly amountEUR: number
+}
 
 const instrumentReference = (
   position: PortfolioPosition
@@ -120,12 +122,6 @@ const allocationFromState = (
   return allocation
 }
 
-const percentageOfPortfolio = (
-  state: PlanningState,
-  valueEUR: number
-): number =>
-  state.totalValueEUR === 0 ? 0 : (valueEUR / state.totalValueEUR) * 100
-
 const candidatesForAssetClass = (
   state: PlanningState,
   assetClass: AssetClass
@@ -170,8 +166,9 @@ const creditCash = (
   state: PlanningState,
   amountEUR: number,
   excludedPosition?: PositionPlanningState
-): void => {
+): ReadonlyArray<CashCredit> => {
   let remainingEUR = amountEUR
+  const credits: CashCredit[] = []
   const eligibleCashPositions = cashPositions(state).filter(
     (cashPosition) => cashPosition !== excludedPosition
   )
@@ -185,10 +182,15 @@ const creditCash = (
 
     cashPosition.proposedValueEUR += creditedEUR
     remainingEUR -= creditedEUR
+    if (creditedEUR > MONEY_COMPARISON_TOLERANCE_EUR) {
+      credits.push({ candidate: cashPosition, amountEUR: creditedEUR })
+    }
   }
 
   // Sale proceeds remain part of cash when no cash position can hold them.
   state.unassignedCashEUR += remainingEUR
+
+  return credits
 }
 
 const debitCash = (state: PlanningState, amountEUR: number): void => {
@@ -224,34 +226,40 @@ const addPlannedSale = (
     return
   }
 
+  const existingSale = plannedSales.get(candidate)
+
   plannedSales.set(candidate, {
-    amountEUR: plannedSaleAmount(candidate, plannedSales) + amountEUR,
+    amountEUR: (existingSale?.amountEUR ?? 0) + amountEUR,
     rationale
   })
 }
 
-const calculateMandatorySales = (state: PlanningState): PlannedSales => {
+const calculateMandatorySales = (
+  state: PlanningState,
+  violations: ReadonlyArray<Violation>
+): PlannedSales => {
   const plannedSales: PlannedSales = new Map()
 
-  for (const candidate of state.positions) {
-    const actualPct = percentageOfPortfolio(
-      state,
-      candidate.proposedValueEUR
-    )
-
-    if (
-      !exceedsMaximumBeyondTolerance(
-        actualPct,
-        percentageOfPortfolio(state, state.maxPositionValueEUR)
-      )
-    ) {
+  for (const violation of violations) {
+    if (violation.constraint !== "maxSinglePositionPct") {
       continue
     }
+
+    const candidate = state.positions.find(
+      ({ position }) => position === violation.position
+    )
+
+    if (candidate === undefined) {
+      continue
+    }
+
+    const maximumValueEUR =
+      (violation.limitPct / 100) * state.totalValueEUR
 
     addPlannedSale(
       plannedSales,
       candidate,
-      candidate.proposedValueEUR - state.maxPositionValueEUR,
+      candidate.proposedValueEUR - maximumValueEUR,
       "position-limit"
     )
   }
@@ -352,20 +360,26 @@ const cashAfterPlannedSales = (
 
 const distributeMinimumCashSales = (
   state: PlanningState,
-  plannedSales: PlannedSales
+  plannedSales: PlannedSales,
+  violations: ReadonlyArray<Violation>
 ): void => {
-  const projectedCashEUR = cashAfterPlannedSales(state, plannedSales)
+  const cashViolation = violations.find(
+    (violation) => violation.constraint === "minCashPct"
+  )
 
-  if (
-    !fallsBelowMinimumBeyondTolerance(
-      percentageOfPortfolio(state, projectedCashEUR),
-      percentageOfPortfolio(state, state.minCashValueEUR)
-    )
-  ) {
+  if (cashViolation === undefined) {
     return
   }
 
-  const cashShortfallEUR = state.minCashValueEUR - projectedCashEUR
+  const projectedCashEUR = cashAfterPlannedSales(state, plannedSales)
+  const minimumCashValueEUR =
+    (cashViolation.limitPct / 100) * state.totalValueEUR
+  const cashShortfallEUR = minimumCashValueEUR - projectedCashEUR
+
+  if (cashShortfallEUR <= MONEY_COMPARISON_TOLERANCE_EUR) {
+    return
+  }
+
   const candidates = state.positions.filter(
     ({ position }) => position.assetClass !== "cash"
   )
@@ -381,10 +395,11 @@ const distributeMinimumCashSales = (
 const distributeAdditionalSales = (
   state: PlanningState,
   profile: RebalancingProfile,
-  plannedSales: PlannedSales
+  plannedSales: PlannedSales,
+  violations: ReadonlyArray<Violation>
 ): void => {
   distributeTargetSales(state, profile, plannedSales)
-  distributeMinimumCashSales(state, plannedSales)
+  distributeMinimumCashSales(state, plannedSales, violations)
 }
 
 const saleRationale = (
@@ -403,10 +418,27 @@ const saleRationale = (
   }
 }
 
+const cashFloorBuyAmountEUR = (
+  state: PlanningState,
+  violations: ReadonlyArray<Violation>
+): number => {
+  const cashViolation = violations.find(
+    (violation) => violation.constraint === "minCashPct"
+  )
+
+  return cashViolation === undefined
+    ? 0
+    : (cashViolation.limitPct / 100) * state.totalValueEUR -
+        availableCashEUR(state)
+}
+
 const applyPlannedSales = (
   state: PlanningState,
-  plannedSales: ReadonlyMap<PositionPlanningState, PlannedSale>
+  plannedSales: ReadonlyMap<PositionPlanningState, PlannedSale>,
+  cashBuyAmountEUR: number
 ): void => {
+  let remainingCashBuyEUR = cashBuyAmountEUR
+
   for (const assetClass of ASSET_CLASSES) {
     const candidates = rankSellCandidates(
       candidatesForAssetClass(state, assetClass)
@@ -420,7 +452,7 @@ const applyPlannedSales = (
       }
 
       candidate.proposedValueEUR -= plannedSale.amountEUR
-      creditCash(
+      const cashCredits = creditCash(
         state,
         plannedSale.amountEUR,
         assetClass === "cash" ? candidate : undefined
@@ -431,18 +463,39 @@ const applyPlannedSales = (
         amountEUR: plannedSale.amountEUR,
         rationale: saleRationale(assetClass, plannedSale.rationale)
       })
+
+      for (const credit of cashCredits) {
+        const amountEUR = Math.min(remainingCashBuyEUR, credit.amountEUR)
+
+        if (amountEUR <= MONEY_COMPARISON_TOLERANCE_EUR) {
+          break
+        }
+
+        state.trades.push({
+          instrument: instrumentReference(credit.candidate.position),
+          action: "buy",
+          amountEUR,
+          rationale: "Increase cash to satisfy the minimum cash allocation."
+        })
+        remainingCashBuyEUR -= amountEUR
+      }
     }
   }
 }
 
 const planSales = (
   state: PlanningState,
-  profile: RebalancingProfile
+  profile: RebalancingProfile,
+  violations: ReadonlyArray<Violation>
 ): void => {
-  const plannedSales = calculateMandatorySales(state)
+  const plannedSales = calculateMandatorySales(state, violations)
 
-  distributeAdditionalSales(state, profile, plannedSales)
-  applyPlannedSales(state, plannedSales)
+  distributeAdditionalSales(state, profile, plannedSales, violations)
+  applyPlannedSales(
+    state,
+    plannedSales,
+    cashFloorBuyAmountEUR(state, violations)
+  )
 }
 
 const planPurchases = (
@@ -536,7 +589,7 @@ export const proposeRebalancing = (
     }
   }
 
-  planSales(state, profile)
+  planSales(state, profile, violations)
   planPurchases(state, profile)
 
   return {

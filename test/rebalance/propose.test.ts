@@ -36,9 +36,10 @@ const profile = (
 
 describe("proposeRebalancing", () => {
   it("sells an oversized position below its asset-class target to satisfy the position limit", () => {
+    const oversizedPosition = position("GOV", "government_bond", 500)
     const proposal = proposeRebalancing(
       portfolio([
-        position("GOV", "government_bond", 500),
+        oversizedPosition,
         position("EQ-1", "equity", 100),
         position("EQ-2", "equity", 100),
         position("EQ-3", "equity", 100),
@@ -59,7 +60,23 @@ describe("proposeRebalancing", () => {
 
     expect(
       proposal.trades.find((trade) => trade.instrument.isin === "GOV")
-    ).toMatchObject({ action: "sell", amountEUR: 350 })
+    ).toEqual({
+      instrument: {
+        isin: "GOV",
+        name: "GOV",
+        assetClass: "government_bond"
+      },
+      action: "sell",
+      amountEUR: 350,
+      rationale:
+        "Reduce government bond to satisfy the single-position limit."
+    })
+    expect(proposal.violations).toContainEqual({
+      constraint: "maxSinglePositionPct",
+      position: oversizedPosition,
+      actualPct: 50,
+      limitPct: 15
+    })
     expect(proposal.afterAllocation.government_bond).toBeCloseTo(15)
     expect(proposal.deferred).toContainEqual({
       instrument: {
@@ -197,7 +214,19 @@ describe("proposeRebalancing", () => {
       amountEUR: 120,
       rationale: "Increase cash to satisfy the minimum cash allocation."
     })
+    expect(proposal.trades).toContainEqual({
+      instrument: { isin: "CASH", name: "CASH", assetClass: "cash" },
+      action: "buy",
+      amountEUR: 120,
+      rationale: "Increase cash to satisfy the minimum cash allocation."
+    })
     expect(proposal.afterAllocation.cash).toBeCloseTo(20)
+    expect(proposal.violations).toContainEqual({
+      constraint: "minCashPct",
+      assetClass: "cash",
+      actualPct: 8,
+      limitPct: 20
+    })
     expect(proposal.deferred).toContainEqual({
       instrument: { isin: "EQ", name: "EQ", assetClass: "equity" },
       amountEUR: 120,
