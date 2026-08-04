@@ -1,0 +1,29 @@
+.footer {
+  border-block-start: var(--border-subtle);
+  background: var(--color-surface-subtle);
+}
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  max-width: var(--layout-content-wide);
+  margin-inline: auto;
+  padding-block: var(--space-6);
+  padding-inline: var(--layout-gutter);
+}
+
+.wordmark {
+  color: var(--color-foreground);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.copyright {
+  margin: 0;
+  color: var(--color-foreground-muted);
+  font-size: var(--font-size-xs);
+}
