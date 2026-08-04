@@ -2,23 +2,23 @@
   color-scheme: light;
 
   /* Colour */
-  --color-background: #f6f8fa;
+  --color-background: #f7f7f5;
   --color-surface: #ffffff;
-  --color-surface-subtle: #eef1f4;
+  --color-surface-subtle: #efefec;
   --color-surface-raised: #ffffff;
-  --color-foreground: #1f2328;
-  --color-foreground-muted: #59636e;
+  --color-foreground: #242422;
+  --color-foreground-muted: #62625d;
   --color-foreground-inverse: #ffffff;
-  --color-border: #c7cdd4;
-  --color-border-strong: #818b98;
-  --color-accent: #0969da;
-  --color-accent-hover: #0550ae;
-  --color-accent-active: #033d8b;
+  --color-border: #d8d8d3;
+  --color-border-strong: #9d9d96;
+  --color-accent: #0f6b4f;
+  --color-accent-hover: #0a513c;
+  --color-accent-active: #073d2d;
   --color-accent-foreground: #ffffff;
   --color-success: #116329;
   --color-success-surface: #dafbe1;
-  --color-warning: #744500;
-  --color-warning-surface: #fff8c5;
+  --color-warning: #7a4b00;
+  --color-warning-surface: #fff7db;
   --color-danger: #a40e26;
   --color-danger-hover: #82071b;
   --color-danger-active: #660514;
@@ -64,6 +64,7 @@
   --space-10: 2.5rem;
   --space-12: 3rem;
   --space-16: 4rem;
+  --space-20: 5rem;
 
   /* Borders, radii, and elevation */
   --border-width: 1px;
@@ -76,9 +77,10 @@
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
   --radius-full: 9999px;
-  --shadow-sm: 0 1px 2px rgb(31 35 40 / 10%);
-  --shadow-md: 0 4px 12px rgb(31 35 40 / 12%);
-  --shadow-lg: 0 12px 32px rgb(31 35 40 / 16%);
+  --shadow-sm: 0 1px 2px rgb(36 36 34 / 8%),
+    0 8px 24px rgb(36 36 34 / 5%);
+  --shadow-md: 0 4px 12px rgb(36 36 34 / 12%);
+  --shadow-lg: 0 12px 32px rgb(36 36 34 / 16%);
 
   /* Motion and focus */
   --duration-instant: 0ms;
@@ -88,7 +90,7 @@
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --ease-enter: cubic-bezier(0, 0, 0, 1);
   --ease-exit: cubic-bezier(0.3, 0, 1, 1);
-  --color-focus-ring: #0969da;
+  --color-focus-ring: #005fcc;
   --focus-ring-width: 3px;
   --focus-ring-offset: 3px;
   --focus-ring: var(--focus-ring-width) solid var(--color-focus-ring);
@@ -98,11 +100,11 @@
   --breakpoint-md: 48rem;
   --breakpoint-lg: 64rem;
   --breakpoint-xl: 90rem;
-  --layout-content-narrow: 40rem;
-  --layout-content: 48rem;
-  --layout-content-wide: 72rem;
+  --layout-content-narrow: 42rem;
+  --layout-content: 56rem;
+  --layout-content-wide: 76rem;
   --layout-gutter: clamp(var(--space-4), 4vw, var(--space-12));
-  --layout-block-spacing: clamp(var(--space-6), 5vw, var(--space-12));
+  --layout-block-spacing: clamp(var(--space-8), 6vw, var(--space-20));
 
   /* Compatibility aliases for existing routes. */
   --color-primary: var(--color-accent);
@@ -114,49 +116,50 @@
   --link-colour: var(--color-accent);
   --link-hover-colour: var(--color-accent-hover);
   --focus-ring-colour: var(--color-focus-ring);
-  --page-max-width: var(--layout-content);
+  --page-max-width: 48rem;
   --page-padding-inline: var(--layout-gutter);
   --page-padding-block: var(--layout-block-spacing);
 
   --portfolio-allocation-colour-1: #1464a5;
-  --portfolio-allocation-colour-2: #a94300;
-  --portfolio-allocation-colour-3: #257a37;
-  --portfolio-allocation-colour-4: #704197;
-  --portfolio-allocation-colour-5: #ac2636;
-  --portfolio-allocation-colour-6: #087683;
-  --portfolio-allocation-colour-7: #715400;
-  --portfolio-allocation-separator: var(--color-surface);
+  --portfolio-allocation-colour-2: #c45100;
+  --portfolio-allocation-colour-3: #25833a;
+  --portfolio-allocation-colour-4: #7c4aa5;
+  --portfolio-allocation-colour-5: #b52637;
+  --portfolio-allocation-colour-6: #087f8c;
+  --portfolio-allocation-colour-7: #7a5b00;
+  --portfolio-allocation-separator: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
 
-    --color-background: #0d1117;
-    --color-surface: #161b22;
-    --color-surface-subtle: #21262d;
-    --color-surface-raised: #1c2128;
-    --color-foreground: #f0f6fc;
-    --color-foreground-muted: #b1bac4;
-    --color-foreground-inverse: #0d1117;
-    --color-border: #444c56;
-    --color-border-strong: #768390;
-    --color-accent: #58a6ff;
-    --color-accent-hover: #79c0ff;
-    --color-accent-active: #a5d6ff;
-    --color-accent-foreground: #0d1117;
+    --color-background: #191918;
+    --color-surface: #222220;
+    --color-surface-subtle: #2b2b28;
+    --color-surface-raised: #222220;
+    --color-foreground: #f1f1ee;
+    --color-foreground-muted: #aaa9a3;
+    --color-foreground-inverse: #191918;
+    --color-border: #41413d;
+    --color-border-strong: #6b6b64;
+    --color-accent: #69c5a4;
+    --color-accent-hover: #8dd7bc;
+    --color-accent-active: #a8e3ce;
+    --color-accent-foreground: #10251e;
     --color-success: #7ee787;
     --color-success-surface: #1b4721;
-    --color-warning: #e3b341;
-    --color-warning-surface: #4d3a00;
+    --color-warning: #f3c76f;
+    --color-warning-surface: #3e3118;
     --color-danger: #ff7b72;
     --color-danger-hover: #ff9b94;
     --color-danger-active: #ffc1bc;
     --color-danger-surface: #4c1d22;
     --color-info: #79c0ff;
     --color-info-surface: #0c2d4a;
-    --color-focus-ring: #58a6ff;
-    --shadow-sm: 0 1px 2px rgb(0 0 0 / 32%);
+    --color-focus-ring: #8ab4ff;
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 28%),
+      0 8px 24px rgb(0 0 0 / 18%);
     --shadow-md: 0 4px 12px rgb(0 0 0 / 38%);
     --shadow-lg: 0 12px 32px rgb(0 0 0 / 46%);
 
@@ -167,7 +170,7 @@
     --portfolio-allocation-colour-5: #ff7888;
     --portfolio-allocation-colour-6: #56c9d3;
     --portfolio-allocation-colour-7: #dec457;
-    --portfolio-allocation-separator: var(--color-surface);
+    --portfolio-allocation-separator: #1d1d1d;
   }
 }
 

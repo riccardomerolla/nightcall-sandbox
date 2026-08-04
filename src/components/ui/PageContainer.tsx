@@ -10,21 +10,19 @@ export interface PageContainerProps extends HTMLAttributes<HTMLElement> {
   readonly width?: PageContainerWidth
 }
 
-export function PageContainer({
+export const PageContainer = ({
   as: Element = "div",
   children,
   className,
   width = "wide",
   ...props
-}: PageContainerProps) {
-  return (
-    <Element
-      className={[styles.container, styles[width], className]
-        .filter(Boolean)
-        .join(" ")}
-      {...props}
-    >
-      {children}
-    </Element>
-  )
-}
+}: PageContainerProps) => (
+  <Element
+    className={[styles.container, styles[width], className]
+      .filter(Boolean)
+      .join(" ")}
+    {...props}
+  >
+    {children}
+  </Element>
+)

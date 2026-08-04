@@ -1,6 +1,6 @@
 import { ActionLink } from "../src/components/ui/ActionLink"
 import { Card } from "../src/components/ui/Card"
-import { PageContainer } from "../src/components/PageContainer"
+import { PageContainer } from "../src/components/ui/PageContainer"
 import { PageHeader } from "../src/components/ui/PageHeader"
 import styles from "./page.module.css"
 

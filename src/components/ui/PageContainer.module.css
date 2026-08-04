@@ -1,19 +1,20 @@
 .container {
   box-sizing: border-box;
-  margin-inline: auto;
-  min-width: 0;
-  padding: clamp(2rem, 6vw, 5rem) clamp(1rem, 4vw, 3rem);
   width: 100%;
+  min-width: 0;
+  margin-inline: auto;
+  padding-block: var(--layout-block-spacing);
+  padding-inline: var(--layout-gutter);
 }
 
 .narrow {
-  max-width: 42rem;
+  max-width: var(--layout-content-narrow);
 }
 
 .default {
-  max-width: 56rem;
+  max-width: var(--layout-content);
 }
 
 .wide {
-  max-width: 76rem;
+  max-width: var(--layout-content-wide);
 }
