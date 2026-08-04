@@ -1,0 +1,56 @@
+.header {
+  min-width: 0;
+}
+
+.topline {
+  align-items: flex-end;
+  display: flex;
+  gap: 1.5rem;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.copy {
+  min-width: 0;
+}
+
+.eyebrow {
+  color: var(--color-accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  margin: 0 0 0.625rem;
+  text-transform: uppercase;
+}
+
+.title {
+  font-size: clamp(2.25rem, 7vw, 4.75rem);
+  letter-spacing: -0.055em;
+  line-height: 0.98;
+  margin: 0;
+}
+
+.description {
+  color: var(--color-foreground-muted);
+  font-size: clamp(1rem, 2vw, 1.125rem);
+  margin: 1rem 0 0;
+  max-width: 62ch;
+}
+
+.actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.content {
+  margin-block-start: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+@media (max-width: 48rem) {
+  .topline {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
