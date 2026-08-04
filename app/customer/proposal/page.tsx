@@ -181,7 +181,9 @@ export default function ProposalPage() {
     return (
       <main
         aria-busy="true"
+        id="main-content"
         style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}
+        tabIndex={-1}
       >
         <h1>Rebalancing proposal</h1>
         <p role="status">Loading customer data…</p>
@@ -198,7 +200,11 @@ export default function ProposalPage() {
         : `The ${sourceLabel} data is invalid: ${state.message}`
 
     return (
-      <main style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}>
+      <main
+        id="main-content"
+        style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}
+        tabIndex={-1}
+      >
         <h1>Unable to load {sourceLabel}</h1>
         <p role="alert">{errorDescription}</p>
         <BackToDashboardLink />
@@ -212,7 +218,11 @@ export default function ProposalPage() {
   )
 
   return (
-    <main style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}>
+    <main
+      id="main-content"
+      style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}
+      tabIndex={-1}
+    >
       <header>
         <p>Customer proposal</p>
         <h1>Rebalancing proposal</h1>

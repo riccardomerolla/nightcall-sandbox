@@ -4,15 +4,19 @@ import styles from "./StatusPanel.module.css"
 
 export interface StatusPanelProps {
   readonly busy?: boolean
+  readonly id?: string
   readonly message: string
   readonly messageRole: "alert" | "status"
+  readonly tabIndex?: number
   readonly title: string
 }
 
 export function StatusPanel({
   busy = false,
+  id,
   message,
   messageRole,
+  tabIndex,
   title
 }: StatusPanelProps) {
   return (
@@ -20,6 +24,8 @@ export function StatusPanel({
       aria-busy={busy || undefined}
       as="main"
       className={styles.page}
+      id={id}
+      tabIndex={tabIndex}
       width="narrow"
     >
       <Card className={styles.panel}>

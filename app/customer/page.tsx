@@ -187,8 +187,10 @@ export default function CustomerPage() {
     return (
       <StatusPanel
         busy
+        id="main-content"
         message="Loading customer data…"
         messageRole="status"
+        tabIndex={-1}
         title="Customer dashboard"
       />
     )
@@ -203,8 +205,10 @@ export default function CustomerPage() {
 
     return (
       <StatusPanel
+        id="main-content"
         message={errorDescription}
         messageRole="alert"
+        tabIndex={-1}
         title={`Unable to load ${sourceLabel}`}
       />
     )
@@ -218,7 +222,12 @@ export default function CustomerPage() {
   const suitability = suitabilityReport(state.portfolio, state.customer)
 
   return (
-    <PageContainer as="main" className={styles.dashboard}>
+    <PageContainer
+      as="main"
+      className={styles.dashboard}
+      id="main-content"
+      tabIndex={-1}
+    >
       <PageHeader
         actions={
           <ActionLink href="/customer/proposal">

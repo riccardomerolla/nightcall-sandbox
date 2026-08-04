@@ -27,7 +27,13 @@ const workflow = [
 
 export default function Home() {
   return (
-    <PageContainer as="main" className={styles.landing} width="default">
+    <PageContainer
+      as="main"
+      className={styles.landing}
+      id="main-content"
+      tabIndex={-1}
+      width="default"
+    >
       <section aria-labelledby="landing-title" className={styles.hero}>
         <PageHeader
           actions={
