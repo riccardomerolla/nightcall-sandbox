@@ -73,6 +73,7 @@ html {
   font-family: var(--font-family-sans);
   font-size: var(--font-size-base);
   min-width: var(--page-min-width);
+  overflow-wrap: break-word;
   text-size-adjust: 100%;
 }
 
