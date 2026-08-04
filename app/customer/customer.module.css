@@ -6,6 +6,40 @@
   width: 100%;
 }
 
+.statePage {
+  align-items: center;
+  display: grid;
+  min-height: 100vh;
+  min-height: 100svh;
+}
+
+.statePanel,
+.emptyState {
+  background: var(--color-surface);
+  border: var(--border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+.statePanel {
+  padding: var(--space-8);
+}
+
+.stateTitle {
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  margin: 0;
+}
+
+.stateMessage {
+  color: var(--color-foreground-muted);
+  margin: var(--space-3) 0 0;
+}
+
+.emptyState {
+  color: var(--color-foreground-muted);
+  margin: 0;
+  padding: var(--space-6);
+}
+
 .portfolioHeader {
   display: grid;
   gap: var(--space-8);
@@ -129,6 +163,10 @@
 
 @media (max-width: 32rem) {
   .dashboard {
+    padding: var(--space-6);
+  }
+
+  .statePanel {
     padding: var(--space-6);
   }
 

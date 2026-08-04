@@ -181,10 +181,14 @@ export default function CustomerPage() {
     return (
       <main
         aria-busy="true"
-        style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}
+        className={`${styles.dashboard} ${styles.statePage}`}
       >
-        <h1>Customer dashboard</h1>
-        <p role="status">Loading customer data…</p>
+        <div className={styles.statePanel}>
+          <h1 className={styles.stateTitle}>Customer dashboard</h1>
+          <p className={styles.stateMessage} role="status">
+            Loading customer data…
+          </p>
+        </div>
       </main>
     )
   }
@@ -197,9 +201,13 @@ export default function CustomerPage() {
         : `The ${sourceLabel} data is invalid: ${state.message}`
 
     return (
-      <main style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}>
-        <h1>Unable to load {sourceLabel}</h1>
-        <p role="alert">{errorDescription}</p>
+      <main className={`${styles.dashboard} ${styles.statePage}`}>
+        <div className={styles.statePanel}>
+          <h1 className={styles.stateTitle}>Unable to load {sourceLabel}</h1>
+          <p className={styles.stateMessage} role="alert">
+            {errorDescription}
+          </p>
+        </div>
       </main>
     )
   }
@@ -331,7 +339,9 @@ export default function CustomerPage() {
       >
         <h2 id="suitability-heading">Suitability violations</h2>
         {suitability.violations.length === 0 ? (
-          <p>No suitability violations detected.</p>
+          <p className={styles.emptyState}>
+            No suitability violations detected.
+          </p>
         ) : (
           <ul>
             {suitability.violations.map((violation) => (
