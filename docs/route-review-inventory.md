@@ -34,15 +34,28 @@ When a page module is added, moved, or removed, update this inventory in the
 same change. Route groups may share one scenario only when that scenario visits
 every page listed in the group.
 
-## Known limitation: no committed pixel-snapshot baselines
+## Known limitation: pixel-snapshot baselines are not yet committed
 
-The scenarios above assert layout responsiveness with CSS-property and
-bounding-box checks (`toHaveCSS`, `boundingBox()`), not
-`expect(page).toHaveScreenshot()`. Adding real pixel-snapshot coverage
-requires running the Playwright browser suite locally to generate and commit
-`-snapshots/` baseline images (`npm run test:browser -- --update-snapshots`);
-that could not be done from the environment that authored this inventory
-because it had no shell/browser execution access. Until that follow-up run
-happens and baselines are committed, do not add `toHaveScreenshot()` calls —
-without a committed baseline, Playwright silently regenerates and passes on
-every CI run, giving no real regression protection.
+Each scenario now also asserts `expect(locator).toHaveScreenshot()` for its
+shell regions and representative page states (shared shell header/nav/footer,
+mobile navigation's closed/open states, each route group's page states, and
+the form's default/invalid states), in addition to the CSS-property and
+bounding-box checks (`toHaveCSS`, `boundingBox()`) that were already present.
+
+Those `toHaveScreenshot()` assertions have no committed baseline images yet:
+generating them requires running the Playwright browser suite once with
+`npm run test:browser -- --update-snapshots` from an environment with
+headless Chromium execution access, then committing the resulting
+`test/browser/*.spec.ts-snapshots/*.png` files. The environment that added
+this coverage could not run that command — every attempt to invoke `npx
+playwright`, the local `playwright` binary, `npm run test:browser`, and even
+plain `node -e`/`npm --version` was blocked by the sandbox's approval gate for
+process execution, with no interactive user available to grant it.
+
+Until that one-time generation run happens, `toHaveScreenshot()` will create
+and pass on its first execution (per Playwright's `updateSnapshots: 'missing'`
+default) rather than fail — so CI stays green, but there is no real pixel
+regression protection until the baselines above are generated and committed.
+No fixture content in these pages is date-, time-, or randomness-derived (see
+`app/**/page.tsx`), so no masking is expected to be necessary; revisit this if
+that changes.

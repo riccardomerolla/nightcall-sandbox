@@ -92,6 +92,12 @@ test.describe("responsive shared shell and desktop navigation", () => {
       await expect(currentNavigationLink).toHaveCSS("box-shadow", /inset/)
       await expect(navigation.locator('[aria-current="page"]')).toHaveCount(1)
 
+      await expect(header).toHaveScreenshot(`${route.name}-header.png`)
+      await expect(navigation).toHaveScreenshot(
+        `${route.name}-navigation.png`
+      )
+      await expect(footer).toHaveScreenshot(`${route.name}-footer.png`)
+
       const [headerBox, footerBox] = await Promise.all([
         header.boundingBox(),
         footer.boundingBox()

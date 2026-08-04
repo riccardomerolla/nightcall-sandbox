@@ -115,6 +115,7 @@ test.describe("customer lookup form validation", () => {
     expect((defaultBox?.x ?? 0) + (defaultBox?.width ?? 0)).toBeLessThanOrEqual(
       viewport.width
     )
+    await expect(form).toHaveScreenshot("form-default.png")
 
     await page.getByRole("button", { name: "View customer dashboard" }).click()
     await expect(page.getByRole("alert")).toBeVisible()
@@ -125,5 +126,6 @@ test.describe("customer lookup form validation", () => {
     expect((invalidBox?.x ?? 0) + (invalidBox?.width ?? 0)).toBeLessThanOrEqual(
       viewport.width
     )
+    await expect(form).toHaveScreenshot("form-invalid.png")
   })
 })

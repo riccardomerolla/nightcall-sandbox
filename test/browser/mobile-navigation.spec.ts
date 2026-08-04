@@ -50,6 +50,7 @@ test("mobile navigation opens, selects a route, and closes", async ({
   await expect(header).toHaveCSS("display", "grid")
   await expect(openNavigation).toHaveCSS("display", "inline-flex")
   await expect(navigation).toBeHidden()
+  await expect(header).toHaveScreenshot("header-closed.png")
 
   await openNavigation.click()
 
@@ -69,6 +70,7 @@ test("mobile navigation opens, selects a route, and closes", async ({
   await expect(overviewLink).toHaveAttribute("aria-current", "page")
   await expect(overviewLink).toHaveCSS("box-shadow", /inset/)
   await expect(navigation.locator('[aria-current="page"]')).toHaveCount(1)
+  await expect(navigation).toHaveScreenshot("navigation-open-overview.png")
 
   await navigation
     .getByRole("link", { name: "Customer", exact: true })
@@ -91,6 +93,7 @@ test("mobile navigation opens, selects a route, and closes", async ({
   await expect(navigation).toBeVisible()
   await expect(customerLink).toHaveCSS("box-shadow", /inset/)
   await expect(navigation.locator('[aria-current="page"]')).toHaveCount(1)
+  await expect(navigation).toHaveScreenshot("navigation-open-customer.png")
 
   await closeNavigation.click()
 

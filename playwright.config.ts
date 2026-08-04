@@ -10,6 +10,15 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? "github" : "list",
+  expect: {
+    toHaveScreenshot: {
+      // Fixture-driven pages have no animation or dynamic content once
+      // `reducedMotion: "reduce"` is applied, so a tight tolerance is enough
+      // to absorb sub-pixel anti-aliasing differences without masking away
+      // real regressions.
+      maxDiffPixelRatio: 0.02
+    }
+  },
   use: {
     baseURL,
     browserName: "chromium",

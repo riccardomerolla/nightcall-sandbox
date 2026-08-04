@@ -77,6 +77,7 @@ test.describe("representative route-group page states", () => {
       page.getByRole("heading", { level: 1, name: "Advisor Workbench" })
     ).toBeVisible()
     await expectPageToFitViewport(page)
+    await expect(page.locator("main")).toHaveScreenshot("root-overview.png")
   })
 
   test("customer-workflow renders loading and populated views", async ({
@@ -94,6 +95,9 @@ test.describe("representative route-group page states", () => {
       await expect(page.locator("main")).toHaveAttribute("aria-busy", "true")
       await expect(page.locator("main")).toHaveCSS("display", "grid")
       await expectPageToFitViewport(page)
+      await expect(page.locator("main")).toHaveScreenshot(
+        "customer-loading.png"
+      )
     } finally {
       customerData.releaseRequest()
     }
@@ -123,6 +127,9 @@ test.describe("representative route-group page states", () => {
       )
     }
     await expectPageToFitViewport(page)
+    await expect(page.locator("main")).toHaveScreenshot(
+      "customer-populated.png"
+    )
 
     await page
       .getByRole("link", { name: "View rebalancing proposal" })
@@ -136,6 +143,9 @@ test.describe("representative route-group page states", () => {
       page.getByRole("heading", { level: 2, name: "Proposed trades" })
     ).toBeVisible()
     await expectPageToFitViewport(page)
+    await expect(page.locator("main")).toHaveScreenshot(
+      "customer-proposal.png"
+    )
   })
 
   test("proposal-placeholder renders its loaded state", async ({ page }) => {
@@ -148,5 +158,8 @@ test.describe("representative route-group page states", () => {
       page.getByText("The customer's rebalancing proposal will be available here.")
     ).toBeVisible()
     await expectPageToFitViewport(page)
+    await expect(page.locator("main")).toHaveScreenshot(
+      "proposal-placeholder.png"
+    )
   })
 })
