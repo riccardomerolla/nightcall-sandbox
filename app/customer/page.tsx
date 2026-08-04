@@ -15,6 +15,7 @@ import { formatEUR } from "../../lib/format/currency"
 import { formatPercent } from "../../lib/format/percent"
 import { importMiFIDJson } from "../../lib/importers/mifid-json"
 import { importPortfolioCsv } from "../../lib/importers/portfolio-csv"
+import { PortfolioAllocationChart } from "../../src/components/PortfolioAllocationChart"
 import styles from "./customer.module.css"
 
 const customerFixtureUrl = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/fixtures/mifid-mario-rossi.json`
@@ -301,6 +302,7 @@ export default function CustomerPage() {
           </tbody>
         </table>
       </section>
+      <PortfolioAllocationChart holdings={state.portfolio.positions} />
       <section
         aria-labelledby="allocation-heading"
         className={styles.dataSection}
