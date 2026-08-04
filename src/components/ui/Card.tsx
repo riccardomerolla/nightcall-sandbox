@@ -1,5 +1,5 @@
 import {
-  type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
   type ElementType,
   type ReactNode
 } from "react"
@@ -14,14 +14,14 @@ type CardOwnProps<Element extends ElementType> = {
 
 export type CardProps<Element extends ElementType = "div"> =
   CardOwnProps<Element> &
-    Omit<ComponentPropsWithoutRef<Element>, keyof CardOwnProps<Element>>
+    Omit<ComponentPropsWithRef<Element>, keyof CardOwnProps<Element>>
 
-export function Card<Element extends ElementType = "div">({
+export const Card = <Element extends ElementType = "div">({
   as,
   children,
   className,
   ...props
-}: CardProps<Element>) {
+}: CardProps<Element>) => {
   const Component = as ?? "div"
 
   return (
