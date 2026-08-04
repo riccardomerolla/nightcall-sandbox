@@ -149,6 +149,11 @@ describe("CustomerPage", () => {
       ["Amundi MSCI Emerging Markets", "€1,069.20", "1.2%"],
       ["Cash account", "€15,400.00", "17.2%"]
     ])
+    expect(
+      Array.from(rows[0]?.children ?? [], (cell) =>
+        cell.getAttribute("data-label")
+      )
+    ).toEqual(["Instrument", "Market value", "Portfolio weight"])
 
     const allocation = container.querySelector(
       'section[aria-labelledby="allocation-heading"]'
@@ -175,12 +180,17 @@ describe("CustomerPage", () => {
         Array.from(row.children, (cell) => cell.textContent)
       )
     ).toEqual([
-      ["Equity", "14.8%", "45.0%", "-30.2%"],
-      ["Government bond", "50.7%", "25.0%", "25.7%"],
-      ["Corporate bond", "8.7%", "15.0%", "-6.3%"],
-      ["Commodity", "8.5%", "7.0%", "1.5%"],
-      ["Cash", "17.2%", "8.0%", "9.2%"]
+      ["Equity", "14.8%", "45.0%", "Below target -30.2%"],
+      ["Government bond", "50.7%", "25.0%", "Above target +25.7%"],
+      ["Corporate bond", "8.7%", "15.0%", "Below target -6.3%"],
+      ["Commodity", "8.5%", "7.0%", "Above target +1.5%"],
+      ["Cash", "17.2%", "8.0%", "Above target +9.2%"]
     ])
+    expect(
+      Array.from(allocationRows[0]?.children ?? [], (cell) =>
+        cell.getAttribute("data-label")
+      )
+    ).toEqual(["Asset class", "Current", "Target", "Deviation"])
 
     const suitability = container.querySelector(
       'section[aria-labelledby="suitability-heading"]'

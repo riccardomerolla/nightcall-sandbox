@@ -59,6 +59,18 @@ const formatUnderscoreDelimitedIdentifier = (identifier: string) =>
 const formatInvestmentHorizon = (years: number) =>
   `${years} ${years === 1 ? "year" : "years"}`
 
+const describeDeviation = (deviationPct: number) => {
+  if (deviationPct > 0) {
+    return `Above target +${formatPercent(deviationPct)}`
+  }
+
+  if (deviationPct < 0) {
+    return `Below target ${formatPercent(deviationPct)}`
+  }
+
+  return `On target ${formatPercent(deviationPct)}`
+}
+
 const describeSuitabilityViolation = (violation: SuitabilityViolation): string => {
   switch (violation.constraint) {
     case "maxSinglePositionPct":
@@ -203,7 +215,7 @@ export default function CustomerPage() {
   )
 
   return (
-    <main style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}>
+    <main className={styles.dashboard}>
       <header
         aria-labelledby="customer-name"
         className={styles.portfolioHeader}
@@ -251,9 +263,12 @@ export default function CustomerPage() {
           </div>
         </dl>
       </header>
-      <section aria-labelledby="positions-heading">
+      <section
+        aria-labelledby="positions-heading"
+        className={styles.dataSection}
+      >
         <h2 id="positions-heading">Positions</h2>
-        <table>
+        <table className={styles.responsiveTable}>
           <thead>
             <tr>
               <th scope="col">Instrument</th>
@@ -264,17 +279,26 @@ export default function CustomerPage() {
           <tbody>
             {weightedPositions.map(({ position, weightPct }) => (
               <tr key={position.isin}>
-                <th scope="row">{position.name}</th>
-                <td>{formatEUR(position.quantity * position.priceEur)}</td>
-                <td>{formatPercent(weightPct)}</td>
+                <th data-label="Instrument" scope="row">
+                  {position.name}
+                </th>
+                <td data-label="Market value">
+                  {formatEUR(position.quantity * position.priceEur)}
+                </td>
+                <td data-label="Portfolio weight">
+                  {formatPercent(weightPct)}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </section>
-      <section aria-labelledby="allocation-heading">
+      <section
+        aria-labelledby="allocation-heading"
+        className={styles.dataSection}
+      >
         <h2 id="allocation-heading">Allocation comparison</h2>
-        <table>
+        <table className={styles.responsiveTable}>
           <thead>
             <tr>
               <th scope="col">Asset class</th>
@@ -287,19 +311,24 @@ export default function CustomerPage() {
             {suitability.deviations.map(
               ({ assetClass, actualPct, targetPct, deviationPct }) => (
                 <tr key={assetClass}>
-                  <th scope="row">
+                  <th data-label="Asset class" scope="row">
                     {formatUnderscoreDelimitedIdentifier(assetClass)}
                   </th>
-                  <td>{formatPercent(actualPct)}</td>
-                  <td>{formatPercent(targetPct)}</td>
-                  <td>{formatPercent(deviationPct)}</td>
+                  <td data-label="Current">{formatPercent(actualPct)}</td>
+                  <td data-label="Target">{formatPercent(targetPct)}</td>
+                  <td data-label="Deviation">
+                    {describeDeviation(deviationPct)}
+                  </td>
                 </tr>
               )
             )}
           </tbody>
         </table>
       </section>
-      <section aria-labelledby="suitability-heading">
+      <section
+        aria-labelledby="suitability-heading"
+        className={styles.dataSection}
+      >
         <h2 id="suitability-heading">Suitability violations</h2>
         {suitability.violations.length === 0 ? (
           <p>No suitability violations detected.</p>
