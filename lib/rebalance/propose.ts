@@ -1,8 +1,4 @@
 import {
-  exceedsMaximumBeyondTolerance,
-  fallsBelowMinimumBeyondTolerance
-} from "../analytics/percentage-comparison"
-import {
   ASSET_CLASSES,
   type AssetClass,
   type PortfolioPosition
@@ -17,11 +13,20 @@ import type {
   Trade,
   Violation
 } from "./types"
+import { detectSuitabilityViolations } from "./suitability"
+import {
+  compareDeferredAdjustments,
+  comparePortfolioPositions,
+  compareTrades
+} from "./ordering"
 
 const INVESTABLE_ASSET_CLASSES = ASSET_CLASSES.filter(
   (assetClass) => assetClass !== "cash"
 )
 const MONEY_COMPARISON_TOLERANCE_EUR = 1e-8
+const MINIMUM_TRADE_AMOUNT_EUR = 500
+const IMMATERIAL_ADJUSTMENT_REASON =
+  "The adjustment is below the EUR 500 minimum trade amount."
 
 interface PositionPlanningState {
   readonly position: PortfolioPosition
@@ -51,6 +56,11 @@ interface PlannedSale {
 
 type PlannedSales = Map<PositionPlanningState, PlannedSale>
 
+interface CashCredit {
+  readonly candidate: PositionPlanningState
+  readonly amountEUR: number
+}
+
 const instrumentReference = (
   position: PortfolioPosition
 ): InstrumentReference => ({
@@ -59,15 +69,21 @@ const instrumentReference = (
   assetClass: position.assetClass
 })
 
+const isImmaterialAdjustment = (amountEUR: number): boolean =>
+  amountEUR <
+  MINIMUM_TRADE_AMOUNT_EUR - MONEY_COMPARISON_TOLERANCE_EUR
+
 const createPlanningState = (
   portfolio: Portfolio,
   profile: RebalancingProfile
 ): PlanningState => {
-  const positions = portfolio.positions.map((position) => {
-    const originalValueEUR = position.quantity * position.priceEur
+  const positions = [...portfolio.positions]
+    .sort(comparePortfolioPositions)
+    .map((position) => {
+      const originalValueEUR = position.quantity * position.priceEur
 
-    return { position, originalValueEUR, proposedValueEUR: originalValueEUR }
-  })
+      return { position, originalValueEUR, proposedValueEUR: originalValueEUR }
+    })
   const totalValueEUR = positions.reduce(
     (total, position) => total + position.originalValueEUR,
     0
@@ -120,55 +136,6 @@ const allocationFromState = (
   return allocation
 }
 
-const percentageOfPortfolio = (
-  state: PlanningState,
-  valueEUR: number
-): number =>
-  state.totalValueEUR === 0 ? 0 : (valueEUR / state.totalValueEUR) * 100
-
-const detectViolations = (
-  state: PlanningState,
-  profile: RebalancingProfile,
-  beforeAllocation: AssetClassAllocationPercentages
-): ReadonlyArray<Violation> => {
-  const positionViolations = state.positions.flatMap(
-    ({ position, originalValueEUR }) => {
-      const actualPct = percentageOfPortfolio(state, originalValueEUR)
-
-      return exceedsMaximumBeyondTolerance(
-        actualPct,
-        profile.maxSinglePositionPct
-      )
-        ? [
-            {
-              constraint: "maxSinglePositionPct" as const,
-              position,
-              actualPct,
-              limitPct: profile.maxSinglePositionPct
-            }
-          ]
-        : []
-    }
-  )
-
-  const cashViolation: ReadonlyArray<Violation> =
-    fallsBelowMinimumBeyondTolerance(
-      beforeAllocation.cash,
-      profile.minCashPct
-    )
-      ? [
-          {
-            constraint: "minCashPct",
-            assetClass: "cash",
-            actualPct: beforeAllocation.cash,
-            limitPct: profile.minCashPct
-          }
-        ]
-      : []
-
-  return [...positionViolations, ...cashViolation]
-}
-
 const candidatesForAssetClass = (
   state: PlanningState,
   assetClass: AssetClass
@@ -190,7 +157,8 @@ const rankSellCandidates = (
   [...candidates].sort(
     (left, right) =>
       right.proposedValueEUR - plannedSaleAmount(right, plannedSales) -
-      (left.proposedValueEUR - plannedSaleAmount(left, plannedSales))
+        (left.proposedValueEUR - plannedSaleAmount(left, plannedSales)) ||
+      comparePortfolioPositions(left.position, right.position)
   )
 
 // Buying the smallest holdings first spreads an allocation across instruments.
@@ -198,7 +166,9 @@ const rankBuyCandidates = (
   candidates: ReadonlyArray<PositionPlanningState>
 ): ReadonlyArray<PositionPlanningState> =>
   [...candidates].sort(
-    (left, right) => left.proposedValueEUR - right.proposedValueEUR
+    (left, right) =>
+      left.proposedValueEUR - right.proposedValueEUR ||
+      comparePortfolioPositions(left.position, right.position)
   )
 
 const cashPositions = (
@@ -213,8 +183,9 @@ const creditCash = (
   state: PlanningState,
   amountEUR: number,
   excludedPosition?: PositionPlanningState
-): void => {
+): ReadonlyArray<CashCredit> => {
   let remainingEUR = amountEUR
+  const credits: CashCredit[] = []
   const eligibleCashPositions = cashPositions(state).filter(
     (cashPosition) => cashPosition !== excludedPosition
   )
@@ -228,10 +199,15 @@ const creditCash = (
 
     cashPosition.proposedValueEUR += creditedEUR
     remainingEUR -= creditedEUR
+    if (creditedEUR > MONEY_COMPARISON_TOLERANCE_EUR) {
+      credits.push({ candidate: cashPosition, amountEUR: creditedEUR })
+    }
   }
 
   // Sale proceeds remain part of cash when no cash position can hold them.
   state.unassignedCashEUR += remainingEUR
+
+  return credits
 }
 
 const debitCash = (state: PlanningState, amountEUR: number): void => {
@@ -267,34 +243,40 @@ const addPlannedSale = (
     return
   }
 
+  const existingSale = plannedSales.get(candidate)
+
   plannedSales.set(candidate, {
-    amountEUR: plannedSaleAmount(candidate, plannedSales) + amountEUR,
+    amountEUR: (existingSale?.amountEUR ?? 0) + amountEUR,
     rationale
   })
 }
 
-const calculateMandatorySales = (state: PlanningState): PlannedSales => {
+const calculateMandatorySales = (
+  state: PlanningState,
+  violations: ReadonlyArray<Violation>
+): PlannedSales => {
   const plannedSales: PlannedSales = new Map()
 
-  for (const candidate of state.positions) {
-    const actualPct = percentageOfPortfolio(
-      state,
-      candidate.proposedValueEUR
-    )
-
-    if (
-      !exceedsMaximumBeyondTolerance(
-        actualPct,
-        percentageOfPortfolio(state, state.maxPositionValueEUR)
-      )
-    ) {
+  for (const violation of violations) {
+    if (violation.constraint !== "maxSinglePositionPct") {
       continue
     }
+
+    const candidate = state.positions.find(
+      ({ position }) => position === violation.position
+    )
+
+    if (candidate === undefined) {
+      continue
+    }
+
+    const maximumValueEUR =
+      (violation.limitPct / 100) * state.totalValueEUR
 
     addPlannedSale(
       plannedSales,
       candidate,
-      candidate.proposedValueEUR - state.maxPositionValueEUR,
+      candidate.proposedValueEUR - maximumValueEUR,
       "position-limit"
     )
   }
@@ -395,20 +377,26 @@ const cashAfterPlannedSales = (
 
 const distributeMinimumCashSales = (
   state: PlanningState,
-  plannedSales: PlannedSales
+  plannedSales: PlannedSales,
+  violations: ReadonlyArray<Violation>
 ): void => {
-  const projectedCashEUR = cashAfterPlannedSales(state, plannedSales)
+  const cashViolation = violations.find(
+    (violation) => violation.constraint === "minCashPct"
+  )
 
-  if (
-    !fallsBelowMinimumBeyondTolerance(
-      percentageOfPortfolio(state, projectedCashEUR),
-      percentageOfPortfolio(state, state.minCashValueEUR)
-    )
-  ) {
+  if (cashViolation === undefined) {
     return
   }
 
-  const cashShortfallEUR = state.minCashValueEUR - projectedCashEUR
+  const projectedCashEUR = cashAfterPlannedSales(state, plannedSales)
+  const minimumCashValueEUR =
+    (cashViolation.limitPct / 100) * state.totalValueEUR
+  const cashShortfallEUR = minimumCashValueEUR - projectedCashEUR
+
+  if (cashShortfallEUR <= MONEY_COMPARISON_TOLERANCE_EUR) {
+    return
+  }
+
   const candidates = state.positions.filter(
     ({ position }) => position.assetClass !== "cash"
   )
@@ -424,10 +412,11 @@ const distributeMinimumCashSales = (
 const distributeAdditionalSales = (
   state: PlanningState,
   profile: RebalancingProfile,
-  plannedSales: PlannedSales
+  plannedSales: PlannedSales,
+  violations: ReadonlyArray<Violation>
 ): void => {
   distributeTargetSales(state, profile, plannedSales)
-  distributeMinimumCashSales(state, plannedSales)
+  distributeMinimumCashSales(state, plannedSales, violations)
 }
 
 const saleRationale = (
@@ -446,10 +435,27 @@ const saleRationale = (
   }
 }
 
+const cashFloorBuyAmountEUR = (
+  state: PlanningState,
+  violations: ReadonlyArray<Violation>
+): number => {
+  const cashViolation = violations.find(
+    (violation) => violation.constraint === "minCashPct"
+  )
+
+  return cashViolation === undefined
+    ? 0
+    : (cashViolation.limitPct / 100) * state.totalValueEUR -
+        availableCashEUR(state)
+}
+
 const applyPlannedSales = (
   state: PlanningState,
-  plannedSales: ReadonlyMap<PositionPlanningState, PlannedSale>
+  plannedSales: ReadonlyMap<PositionPlanningState, PlannedSale>,
+  cashBuyAmountEUR: number
 ): void => {
+  let remainingCashBuyEUR = cashBuyAmountEUR
+
   for (const assetClass of ASSET_CLASSES) {
     const candidates = rankSellCandidates(
       candidatesForAssetClass(state, assetClass)
@@ -462,8 +468,17 @@ const applyPlannedSales = (
         continue
       }
 
+      if (isImmaterialAdjustment(plannedSale.amountEUR)) {
+        state.deferred.push({
+          instrument: instrumentReference(candidate.position),
+          amountEUR: plannedSale.amountEUR,
+          reason: IMMATERIAL_ADJUSTMENT_REASON
+        })
+        continue
+      }
+
       candidate.proposedValueEUR -= plannedSale.amountEUR
-      creditCash(
+      const cashCredits = creditCash(
         state,
         plannedSale.amountEUR,
         assetClass === "cash" ? candidate : undefined
@@ -474,18 +489,49 @@ const applyPlannedSales = (
         amountEUR: plannedSale.amountEUR,
         rationale: saleRationale(assetClass, plannedSale.rationale)
       })
+
+      for (const credit of cashCredits) {
+        const amountEUR = Math.min(remainingCashBuyEUR, credit.amountEUR)
+
+        if (amountEUR <= MONEY_COMPARISON_TOLERANCE_EUR) {
+          break
+        }
+
+        if (isImmaterialAdjustment(amountEUR)) {
+          state.deferred.push({
+            instrument: instrumentReference(credit.candidate.position),
+            amountEUR,
+            reason: IMMATERIAL_ADJUSTMENT_REASON
+          })
+          remainingCashBuyEUR -= amountEUR
+          continue
+        }
+
+        state.trades.push({
+          instrument: instrumentReference(credit.candidate.position),
+          action: "buy",
+          amountEUR,
+          rationale: "Increase cash to satisfy the minimum cash allocation."
+        })
+        remainingCashBuyEUR -= amountEUR
+      }
     }
   }
 }
 
 const planSales = (
   state: PlanningState,
-  profile: RebalancingProfile
+  profile: RebalancingProfile,
+  violations: ReadonlyArray<Violation>
 ): void => {
-  const plannedSales = calculateMandatorySales(state)
+  const plannedSales = calculateMandatorySales(state, violations)
 
-  distributeAdditionalSales(state, profile, plannedSales)
-  applyPlannedSales(state, plannedSales)
+  distributeAdditionalSales(state, profile, plannedSales, violations)
+  applyPlannedSales(
+    state,
+    plannedSales,
+    cashFloorBuyAmountEUR(state, violations)
+  )
 }
 
 const planPurchases = (
@@ -510,7 +556,18 @@ const planPurchases = (
       state.deferred.push({
         assetClass,
         amountEUR: amountToBuyEUR,
-        reason: "No existing position is available for this asset class."
+        reason: isImmaterialAdjustment(amountToBuyEUR)
+          ? IMMATERIAL_ADJUSTMENT_REASON
+          : "No existing position is available for this asset class."
+      })
+      continue
+    }
+
+    if (isImmaterialAdjustment(amountToBuyEUR)) {
+      state.deferred.push({
+        instrument: instrumentReference(firstCandidate.position),
+        amountEUR: amountToBuyEUR,
+        reason: IMMATERIAL_ADJUSTMENT_REASON
       })
       continue
     }
@@ -540,6 +597,16 @@ const planPurchases = (
         continue
       }
 
+      if (isImmaterialAdjustment(amountEUR)) {
+        state.deferred.push({
+          instrument: instrumentReference(candidate.position),
+          amountEUR,
+          reason: IMMATERIAL_ADJUSTMENT_REASON
+        })
+        amountToBuyEUR -= amountEUR
+        continue
+      }
+
       candidate.proposedValueEUR += amountEUR
       debitCash(state, amountEUR)
       state.trades.push({
@@ -555,7 +622,9 @@ const planPurchases = (
       state.deferred.push({
         instrument: instrumentReference(firstCandidate.position),
         amountEUR: amountToBuyEUR,
-        reason: deferralReason
+        reason: isImmaterialAdjustment(amountToBuyEUR)
+          ? IMMATERIAL_ADJUSTMENT_REASON
+          : deferralReason
       })
     }
   }
@@ -567,7 +636,7 @@ export const proposeRebalancing = (
 ): RebalancingProposal => {
   const state = createPlanningState(portfolio, profile)
   const beforeAllocation = allocationFromState(state)
-  const violations = detectViolations(state, profile, beforeAllocation)
+  const violations = detectSuitabilityViolations(portfolio, profile)
 
   if (state.totalValueEUR === 0) {
     return {
@@ -579,14 +648,14 @@ export const proposeRebalancing = (
     }
   }
 
-  planSales(state, profile)
+  planSales(state, profile, violations)
   planPurchases(state, profile)
 
   return {
     beforeAllocation,
     afterAllocation: allocationFromState(state),
-    trades: state.trades,
-    deferred: state.deferred,
+    trades: [...state.trades].sort(compareTrades),
+    deferred: [...state.deferred].sort(compareDeferredAdjustments),
     violations
   }
 }
