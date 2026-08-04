@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
+    "test:browser": "playwright test",
     "test:export": "node --test test/static-export.test.mjs",
     "typecheck": "tsc --noEmit",
     "gate": "npm run typecheck && npm run test && npm run build && npm run test:export"
@@ -19,6 +20,7 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.51.1",
     "@types/node": "^22.19.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",

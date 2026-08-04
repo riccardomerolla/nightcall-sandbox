@@ -1,3 +1,4 @@
+import { CustomerLookupForm } from "../src/components/CustomerLookupForm"
 import { ActionLink } from "../src/components/ui/ActionLink"
 import { Card } from "../src/components/ui/Card"
 import { PageContainer } from "../src/components/ui/PageContainer"
@@ -27,7 +28,13 @@ const workflow = [
 
 export default function Home() {
   return (
-    <PageContainer as="main" className={styles.landing} width="default">
+    <PageContainer
+      as="main"
+      className={styles.landing}
+      id="main-content"
+      tabIndex={-1}
+      width="default"
+    >
       <section aria-labelledby="landing-title" className={styles.hero}>
         <PageHeader
           actions={
@@ -63,6 +70,10 @@ export default function Home() {
             </Card>
           ))}
         </div>
+      </section>
+
+      <section aria-label="Customer lookup" className={styles.lookup}>
+        <CustomerLookupForm />
       </section>
     </PageContainer>
   )

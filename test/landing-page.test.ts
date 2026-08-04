@@ -4,7 +4,26 @@ import { act, createElement } from "react"
 import { createRoot, type Root } from "react-dom/client"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
+import {
+  AppRouterContext,
+  type AppRouterInstance
+} from "next/dist/shared/lib/app-router-context.shared-runtime"
+
 import Home from "../app/page"
+
+// `useRouter()` reads from `AppRouterContext` (see
+// next/dist/client/components/navigation.js), so rendering with a real
+// provider value exercises the actual hook instead of relying on
+// `vi.mock("next/navigation", ...)` hoisting, which this project's vitest
+// setup does not apply reliably before the mocked module is imported.
+const stubRouter: AppRouterInstance = {
+  back: () => {},
+  forward: () => {},
+  prefetch: () => {},
+  push: () => {},
+  refresh: () => {},
+  replace: () => {}
+}
 
 describe("Home", () => {
   let container: HTMLDivElement
@@ -23,7 +42,15 @@ describe("Home", () => {
   })
 
   it("presents the advisor workflow and links to the primary routes", () => {
-    act(() => root.render(createElement(Home)))
+    act(() =>
+      root.render(
+        createElement(
+          AppRouterContext.Provider,
+          { value: stubRouter },
+          createElement(Home)
+        )
+      )
+    )
 
     expect(container.querySelector("main h1")?.textContent).toBe(
       "Advisor Workbench"

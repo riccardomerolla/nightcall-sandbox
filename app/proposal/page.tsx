@@ -2,7 +2,11 @@ import Link from "next/link"
 
 export default function ProposalPage() {
   return (
-    <main style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}>
+    <main
+      id="main-content"
+      style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}
+      tabIndex={-1}
+    >
       <h1>Rebalancing proposal</h1>
       <p>The customer&apos;s rebalancing proposal will be available here.</p>
       <p>
