@@ -20,6 +20,8 @@
   --color-warning: #744500;
   --color-warning-surface: #fff8c5;
   --color-danger: #a40e26;
+  --color-danger-hover: #82071b;
+  --color-danger-active: #660514;
   --color-danger-surface: #ffebe9;
   --color-info: #0550ae;
   --color-info-surface: #ddf4ff;
@@ -148,6 +150,8 @@
     --color-warning: #e3b341;
     --color-warning-surface: #4d3a00;
     --color-danger: #ff7b72;
+    --color-danger-hover: #ff9b94;
+    --color-danger-active: #ffc1bc;
     --color-danger-surface: #4c1d22;
     --color-info: #79c0ff;
     --color-info-surface: #0c2d4a;
