@@ -28,7 +28,8 @@ export default defineConfig({
   projects: [
     {
       name: "chromium-375",
-      testMatch: /(keyboard-navigation|mobile-navigation|route-groups)\.spec\.ts/,
+      testMatch:
+        /(accessibility|keyboard-navigation|mobile-navigation|route-groups)\.spec\.ts/,
       use: { viewport: { width: 375, height: 812 } }
     },
     {

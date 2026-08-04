@@ -14,10 +14,10 @@ module and should also include any future `src/app/**/page.tsx` modules.
 
 | Page module | Route | Route group | Review status | Representative browser/accessibility scenario |
 | --- | --- | --- | --- | --- |
-| `app/page.tsx` | `/` | Root | Pending | `root-shell`: loaded landing page at 375px, 768px, and 1440px; shared-shell keyboard order and WCAG AA scan |
-| `app/customer/page.tsx` | `/customer` | Customer workflow | Pending | `customer-workflow`: deterministic populated and loading dashboard states at 375px, 768px, and 1440px; navigation, keyboard order, and WCAG AA scans |
-| `app/customer/proposal/page.tsx` | `/customer/proposal` | Customer workflow | Pending | `customer-workflow`: follow the dashboard proposal action, then review populated and empty proposal states responsively and with a WCAG AA scan |
-| `app/proposal/page.tsx` | `/proposal` | Proposal placeholder | Pending | `proposal-placeholder`: loaded placeholder at 375px, 768px, and 1440px; back-link keyboard focus and WCAG AA scan |
+| `app/page.tsx` | `/` | Root | Covered | `root-shell`: loaded landing page at 375px, 768px, and 1440px; shared-shell keyboard order and WCAG AA scan |
+| `app/customer/page.tsx` | `/customer` | Customer workflow | Covered | `customer-workflow`: deterministic populated, loading, and invalid-data dashboard states at 375px, 768px, and 1440px; navigation, keyboard order, and WCAG AA scans |
+| `app/customer/proposal/page.tsx` | `/customer/proposal` | Customer workflow | Covered | `customer-workflow`: follow the dashboard proposal action, then review the populated proposal state responsively and with a WCAG AA scan |
+| `app/proposal/page.tsx` | `/proposal` | Proposal placeholder | Covered | `proposal-placeholder`: loaded placeholder at 375px, 768px, and 1440px; back-link keyboard focus and WCAG AA scan |
 
 ## Route groups
 
