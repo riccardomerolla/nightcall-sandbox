@@ -1,7 +1,6 @@
 "use client"
 
 import { Effect } from "effect"
-import Link from "next/link"
 import { useEffect, useState } from "react"
 
 import { MODEL_TARGET_ALLOCATION_PERCENTAGES } from "../../../lib/domain/models"
@@ -16,6 +15,11 @@ import { importMiFIDJson } from "../../../lib/importers/mifid-json"
 import { importPortfolioCsv } from "../../../lib/importers/portfolio-csv"
 import { proposeRebalancing } from "../../../lib/rebalance/propose"
 import type { RebalancingProposal } from "../../../lib/rebalance/types"
+import { ActionLink } from "../../../src/components/ui/ActionLink"
+import { PageContainer } from "../../../src/components/ui/PageContainer"
+import { PageHeader } from "../../../src/components/ui/PageHeader"
+import { StatusPanel } from "../../../src/components/ui/StatusPanel"
+import styles from "./proposal.module.css"
 
 const customerFixtureUrl = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/fixtures/mifid-mario-rossi.json`
 const portfolioFixtureUrl = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/fixtures/portfolio-mario-rossi.csv`
@@ -156,12 +160,6 @@ const loadProposal = async (signal: AbortSignal): Promise<ProposalState> => {
   return { status: "loaded", customer, proposal }
 }
 
-const BackToDashboardLink = () => (
-  <p>
-    <Link href="/customer">Back to customer dashboard</Link>
-  </p>
-)
-
 export default function ProposalPage() {
   const [state, setState] = useState<ProposalState>({ status: "loading" })
 
@@ -177,18 +175,21 @@ export default function ProposalPage() {
     return () => controller.abort()
   }, [])
 
+  const backToDashboardLink = (
+    <ActionLink href="/customer">Back to customer dashboard</ActionLink>
+  )
+
   if (state.status === "loading") {
     return (
-      <main
-        aria-busy="true"
+      <StatusPanel
+        actions={backToDashboardLink}
+        busy
         id="main-content"
-        style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}
+        message="Loading customer data…"
+        messageRole="status"
         tabIndex={-1}
-      >
-        <h1>Rebalancing proposal</h1>
-        <p role="status">Loading customer data…</p>
-        <BackToDashboardLink />
-      </main>
+        title="Rebalancing proposal"
+      />
     )
   }
 
@@ -200,15 +201,14 @@ export default function ProposalPage() {
         : `The ${sourceLabel} data is invalid: ${state.message}`
 
     return (
-      <main
+      <StatusPanel
+        actions={backToDashboardLink}
         id="main-content"
-        style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}
+        message={errorDescription}
+        messageRole="alert"
         tabIndex={-1}
-      >
-        <h1>Unable to load {sourceLabel}</h1>
-        <p role="alert">{errorDescription}</p>
-        <BackToDashboardLink />
-      </main>
+        title={`Unable to load ${sourceLabel}`}
+      />
     )
   }
 
@@ -218,17 +218,20 @@ export default function ProposalPage() {
   )
 
   return (
-    <main
+    <PageContainer
+      as="main"
+      className={styles.page}
       id="main-content"
-      style={{ padding: "3rem", maxWidth: "48rem", margin: "0 auto" }}
       tabIndex={-1}
     >
-      <header>
-        <p>Customer proposal</p>
-        <h1>Rebalancing proposal</h1>
-        <p>Prepared for {state.customer.fullName}.</p>
-        <BackToDashboardLink />
-      </header>
+      <PageHeader
+        actions={backToDashboardLink}
+        className={styles.header}
+        description={`Prepared for ${state.customer.fullName}.`}
+        eyebrow="Customer proposal"
+        title="Rebalancing proposal"
+        titleId="proposal-heading"
+      />
 
       <section aria-labelledby="allocation-heading">
         <h2 id="allocation-heading">Allocation comparison</h2>
@@ -319,6 +322,6 @@ export default function ProposalPage() {
           </table>
         )}
       </section>
-    </main>
+    </PageContainer>
   )
 }

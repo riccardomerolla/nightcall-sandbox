@@ -82,7 +82,12 @@ describe("ProposalPage", () => {
     expect(container.querySelector('[role="status"]')?.textContent).toBe(
       "Loading customer data…"
     )
-    expect(container.querySelector("a")?.getAttribute("href")).toBe("/customer")
+    expect(container.querySelector("a")?.textContent).toBe(
+      "Back to customer dashboard"
+    )
+    expect(container.querySelector("a")?.getAttribute("href")).toBe(
+      "/customer"
+    )
 
     await act(async () => {
       respond(new Response(customerFixture, { status: 200 }))
@@ -254,7 +259,12 @@ describe("ProposalPage", () => {
     expect(container.querySelector('[role="alert"]')?.textContent).toContain(
       "The customer data is invalid: Invalid JSON:"
     )
-    expect(container.querySelector("a")?.getAttribute("href")).toBe("/customer")
+    expect(container.querySelector("a")?.textContent).toBe(
+      "Back to customer dashboard"
+    )
+    expect(container.querySelector("a")?.getAttribute("href")).toBe(
+      "/customer"
+    )
   })
 
   it("renders dashboard-consistent portfolio parse errors", async () => {
@@ -275,6 +285,12 @@ describe("ProposalPage", () => {
     )
     expect(container.querySelector('[role="alert"]')?.textContent).toContain(
       "The portfolio data is invalid: Expected header"
+    )
+    expect(container.querySelector("a")?.textContent).toBe(
+      "Back to customer dashboard"
+    )
+    expect(container.querySelector("a")?.getAttribute("href")).toBe(
+      "/customer"
     )
   })
 })

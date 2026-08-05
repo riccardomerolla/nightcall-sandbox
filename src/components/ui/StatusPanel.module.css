@@ -28,3 +28,7 @@
   color: var(--color-foreground-muted);
   margin: 0.75rem 0 0;
 }
+
+.actions {
+  margin-top: 1.25rem;
+}
