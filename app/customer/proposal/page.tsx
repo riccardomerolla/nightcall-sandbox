@@ -15,6 +15,7 @@ import { importMiFIDJson } from "../../../lib/importers/mifid-json"
 import { importPortfolioCsv } from "../../../lib/importers/portfolio-csv"
 import { proposeRebalancing } from "../../../lib/rebalance/propose"
 import type { RebalancingProposal } from "../../../lib/rebalance/types"
+import { PortfolioReallocationChart } from "../../../src/components/PortfolioReallocationChart"
 import { ActionLink } from "../../../src/components/ui/ActionLink"
 import { Card } from "../../../src/components/ui/Card"
 import { EmptyState } from "../../../src/components/ui/EmptyState"
@@ -241,31 +242,43 @@ export default function ProposalPage() {
         className={styles.dataSection}
       >
         <h2 id="allocation-heading">Allocation comparison</h2>
-        <div className={styles.tableFrame}>
-          <table className={styles.responsiveTable}>
-            <thead>
-              <tr>
-                <th scope="col">Asset class</th>
-                <th scope="col">Before</th>
-                <th scope="col">After</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ASSET_CLASSES.map((assetClass) => (
-                <tr key={assetClass}>
-                  <th data-label="Asset class" scope="row">
-                    {formatUnderscoreDelimitedIdentifier(assetClass)}
-                  </th>
-                  <td data-label="Before">
-                    {formatPercent(state.proposal.beforeAllocation[assetClass])}
-                  </td>
-                  <td data-label="After">
-                    {formatPercent(state.proposal.afterAllocation[assetClass])}
-                  </td>
+        <div className={styles.allocationLayout}>
+          <div className={styles.tableFrame}>
+            <table className={styles.responsiveTable}>
+              <thead>
+                <tr>
+                  <th scope="col">Asset class</th>
+                  <th scope="col">Before</th>
+                  <th scope="col">After</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {ASSET_CLASSES.map((assetClass) => (
+                  <tr key={assetClass}>
+                    <th data-label="Asset class" scope="row">
+                      {formatUnderscoreDelimitedIdentifier(assetClass)}
+                    </th>
+                    <td data-label="Before">
+                      {formatPercent(
+                        state.proposal.beforeAllocation[assetClass]
+                      )}
+                    </td>
+                    <td data-label="After">
+                      {formatPercent(
+                        state.proposal.afterAllocation[assetClass]
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className={styles.reallocationChart}>
+            <PortfolioReallocationChart
+              afterAllocation={state.proposal.afterAllocation}
+              beforeAllocation={state.proposal.beforeAllocation}
+            />
+          </div>
         </div>
       </Card>
 

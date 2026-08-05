@@ -120,6 +120,25 @@ describe("ProposalPage", () => {
       ["Cash", "17.2%", "8.0%"]
     ])
 
+    const reallocationChart = allocation?.querySelector(
+      ".portfolio-reallocation-chart"
+    )
+    expect(reallocationChart).not.toBeNull()
+    expect(
+      Array.from(
+        reallocationChart?.querySelectorAll(
+          ".portfolio-reallocation-chart__row"
+        ) ?? [],
+        (row) => row.textContent
+      )
+    ).toEqual([
+      "Equity14.8% → 45.0%",
+      "Government bond50.7% → 25.0%",
+      "Corporate bond8.7% → 15.0%",
+      "Commodity8.5% → 7.0%",
+      "Cash17.2% → 8.0%"
+    ])
+
     const summary = container.querySelector(
       'section[aria-labelledby="summary-heading"]'
     )

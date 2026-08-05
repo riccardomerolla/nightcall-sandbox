@@ -13,9 +13,23 @@
   margin: 0 0 1.25rem;
 }
 
+.allocationLayout {
+  display: grid;
+  gap: clamp(1.5rem, 4vw, 2.5rem);
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.9fr);
+}
+
 .tableFrame {
   min-width: 0;
   width: 100%;
+}
+
+.reallocationChart :global(.portfolio-reallocation-chart) {
+  margin: 0;
+}
+
+.reallocationChart :global(.portfolio-reallocation-chart) h2 {
+  font-size: clamp(1.125rem, 2.5vw, 1.375rem);
 }
 
 .responsiveTable {
@@ -51,6 +65,12 @@
 
 .responsiveTable tbody tr:last-child > * {
   border-bottom: 0;
+}
+
+@media (max-width: 56rem) {
+  .allocationLayout {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 36rem) {
