@@ -16,6 +16,8 @@ import { importPortfolioCsv } from "../../../lib/importers/portfolio-csv"
 import { proposeRebalancing } from "../../../lib/rebalance/propose"
 import type { RebalancingProposal } from "../../../lib/rebalance/types"
 import { ActionLink } from "../../../src/components/ui/ActionLink"
+import { Card } from "../../../src/components/ui/Card"
+import { EmptyState } from "../../../src/components/ui/EmptyState"
 import { PageContainer } from "../../../src/components/ui/PageContainer"
 import { PageHeader } from "../../../src/components/ui/PageHeader"
 import { StatusPanel } from "../../../src/components/ui/StatusPanel"
@@ -233,31 +235,45 @@ export default function ProposalPage() {
         titleId="proposal-heading"
       />
 
-      <section aria-labelledby="allocation-heading">
+      <Card
+        aria-labelledby="allocation-heading"
+        as="section"
+        className={styles.dataSection}
+      >
         <h2 id="allocation-heading">Allocation comparison</h2>
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">Asset class</th>
-              <th scope="col">Before</th>
-              <th scope="col">After</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ASSET_CLASSES.map((assetClass) => (
-              <tr key={assetClass}>
-                <th scope="row">
-                  {formatUnderscoreDelimitedIdentifier(assetClass)}
-                </th>
-                <td>{formatPercent(state.proposal.beforeAllocation[assetClass])}</td>
-                <td>{formatPercent(state.proposal.afterAllocation[assetClass])}</td>
+        <div className={styles.tableFrame}>
+          <table className={styles.responsiveTable}>
+            <thead>
+              <tr>
+                <th scope="col">Asset class</th>
+                <th scope="col">Before</th>
+                <th scope="col">After</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+            </thead>
+            <tbody>
+              {ASSET_CLASSES.map((assetClass) => (
+                <tr key={assetClass}>
+                  <th data-label="Asset class" scope="row">
+                    {formatUnderscoreDelimitedIdentifier(assetClass)}
+                  </th>
+                  <td data-label="Before">
+                    {formatPercent(state.proposal.beforeAllocation[assetClass])}
+                  </td>
+                  <td data-label="After">
+                    {formatPercent(state.proposal.afterAllocation[assetClass])}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
 
-      <section aria-labelledby="summary-heading">
+      <Card
+        aria-labelledby="summary-heading"
+        as="section"
+        className={styles.dataSection}
+      >
         <h2 id="summary-heading">Proposal summary</h2>
         <dl>
           <dt>Trade count</dt>
@@ -267,61 +283,79 @@ export default function ProposalPage() {
           <dt>Resulting cash allocation</dt>
           <dd>{formatPercent(state.proposal.afterAllocation.cash)}</dd>
         </dl>
-      </section>
+      </Card>
 
-      <section aria-labelledby="trades-heading">
+      <Card
+        aria-labelledby="trades-heading"
+        as="section"
+        className={styles.dataSection}
+      >
         <h2 id="trades-heading">Proposed trades</h2>
         {state.proposal.trades.length === 0 ? (
-          <p>No trades are proposed.</p>
+          <EmptyState>No trades are proposed.</EmptyState>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">Action</th>
-                <th scope="col">Instrument</th>
-                <th scope="col">Amount</th>
-                <th scope="col">Rationale</th>
-              </tr>
-            </thead>
-            <tbody>
-              {state.proposal.trades.map((trade) => (
-                <tr key={`${trade.action}-${trade.instrument.isin}`}>
-                  <td>{formatUnderscoreDelimitedIdentifier(trade.action)}</td>
-                  <th scope="row">{trade.instrument.name}</th>
-                  <td>{formatEUR(trade.amountEUR)}</td>
-                  <td>{trade.rationale}</td>
+          <div className={styles.tableFrame}>
+            <table className={styles.responsiveTable}>
+              <thead>
+                <tr>
+                  <th scope="col">Action</th>
+                  <th scope="col">Instrument</th>
+                  <th scope="col">Amount</th>
+                  <th scope="col">Rationale</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {state.proposal.trades.map((trade) => (
+                  <tr key={`${trade.action}-${trade.instrument.isin}`}>
+                    <td data-label="Action">
+                      {formatUnderscoreDelimitedIdentifier(trade.action)}
+                    </td>
+                    <th data-label="Instrument" scope="row">
+                      {trade.instrument.name}
+                    </th>
+                    <td data-label="Amount">{formatEUR(trade.amountEUR)}</td>
+                    <td data-label="Rationale">{trade.rationale}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
-      </section>
+      </Card>
 
-      <section aria-labelledby="deferred-heading">
+      <Card
+        aria-labelledby="deferred-heading"
+        as="section"
+        className={styles.dataSection}
+      >
         <h2 id="deferred-heading">Deferred adjustments</h2>
         {state.proposal.deferred.length === 0 ? (
-          <p>No adjustments are deferred.</p>
+          <EmptyState>No adjustments are deferred.</EmptyState>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">Instrument</th>
-                <th scope="col">Amount</th>
-                <th scope="col">Reason</th>
-              </tr>
-            </thead>
-            <tbody>
-              {state.proposal.deferred.map((adjustment) => (
-                <tr key={deferredAdjustmentKey(adjustment)}>
-                  <th scope="row">{deferredAdjustmentLabel(adjustment)}</th>
-                  <td>{formatEUR(adjustment.amountEUR)}</td>
-                  <td>{adjustment.reason}</td>
+          <div className={styles.tableFrame}>
+            <table className={styles.responsiveTable}>
+              <thead>
+                <tr>
+                  <th scope="col">Instrument</th>
+                  <th scope="col">Amount</th>
+                  <th scope="col">Reason</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {state.proposal.deferred.map((adjustment) => (
+                  <tr key={deferredAdjustmentKey(adjustment)}>
+                    <th data-label="Instrument" scope="row">
+                      {deferredAdjustmentLabel(adjustment)}
+                    </th>
+                    <td data-label="Amount">{formatEUR(adjustment.amountEUR)}</td>
+                    <td data-label="Reason">{adjustment.reason}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
-      </section>
+      </Card>
     </PageContainer>
   )
 }
