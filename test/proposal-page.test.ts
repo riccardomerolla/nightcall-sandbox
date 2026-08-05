@@ -82,7 +82,12 @@ describe("ProposalPage", () => {
     expect(container.querySelector('[role="status"]')?.textContent).toBe(
       "Loading customer data…"
     )
-    expect(container.querySelector("a")?.getAttribute("href")).toBe("/customer")
+    expect(container.querySelector("a")?.textContent).toBe(
+      "Back to customer dashboard"
+    )
+    expect(container.querySelector("a")?.getAttribute("href")).toBe(
+      "/customer"
+    )
 
     await act(async () => {
       respond(new Response(customerFixture, { status: 200 }))
@@ -113,6 +118,25 @@ describe("ProposalPage", () => {
       ["Corporate bond", "8.7%", "15.0%"],
       ["Commodity", "8.5%", "7.0%"],
       ["Cash", "17.2%", "8.0%"]
+    ])
+
+    const reallocationChart = allocation?.querySelector(
+      ".portfolio-reallocation-chart"
+    )
+    expect(reallocationChart).not.toBeNull()
+    expect(
+      Array.from(
+        reallocationChart?.querySelectorAll(
+          ".portfolio-reallocation-chart__row"
+        ) ?? [],
+        (row) => row.textContent
+      )
+    ).toEqual([
+      "Equity14.8% → 45.0%",
+      "Government bond50.7% → 25.0%",
+      "Corporate bond8.7% → 15.0%",
+      "Commodity8.5% → 7.0%",
+      "Cash17.2% → 8.0%"
     ])
 
     const summary = container.querySelector(
@@ -254,7 +278,12 @@ describe("ProposalPage", () => {
     expect(container.querySelector('[role="alert"]')?.textContent).toContain(
       "The customer data is invalid: Invalid JSON:"
     )
-    expect(container.querySelector("a")?.getAttribute("href")).toBe("/customer")
+    expect(container.querySelector("a")?.textContent).toBe(
+      "Back to customer dashboard"
+    )
+    expect(container.querySelector("a")?.getAttribute("href")).toBe(
+      "/customer"
+    )
   })
 
   it("renders dashboard-consistent portfolio parse errors", async () => {
@@ -275,6 +304,12 @@ describe("ProposalPage", () => {
     )
     expect(container.querySelector('[role="alert"]')?.textContent).toContain(
       "The portfolio data is invalid: Expected header"
+    )
+    expect(container.querySelector("a")?.textContent).toBe(
+      "Back to customer dashboard"
+    )
+    expect(container.querySelector("a")?.getAttribute("href")).toBe(
+      "/customer"
     )
   })
 })
